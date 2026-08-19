@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RunBar — GitHub Actions in your menu bar</title>
+    <meta
+      name="description"
+      content="A tiny macOS menu bar app that watches GitHub Actions for the repos you ship. Pin Deploy to prod. Filter to your runs. Uses your existing gh session."
+    />
+    <link rel="canonical" href="https://bryaneaton13.github.io/gh-actions-runbar/" />
+    <meta property="og:title" content="RunBar — GitHub Actions in your menu bar" />
+    <meta
+      property="og:description"
+      content="Watch the repos you ship from the macOS menu bar. Built locally. Signed in through gh. No tokens stored."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://bryaneaton13.github.io/gh-actions-runbar/" />
+    <meta property="og:image" content="https://bryaneaton13.github.io/gh-actions-runbar/assets/icon.png" />
+    <meta name="theme-color" content="#12141a" />
+    <link rel="icon" href="./assets/icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./site.css" />
+  </head>
+  <body>
+    <div class="menubar" aria-hidden="true">
+      <div class="menubar-left">
+        <span>RunBar</span>
+        <span>File</span>
+        <span>Edit</span>
+      </div>
+      <div class="menubar-right">
+        <span class="status">
+          <svg class="status-bolt" viewBox="0 0 16 16" aria-hidden="true">
+            <path fill="currentColor" d="M9.2 1.2 3.4 8.4h4.1L6.6 14.8l6.4-8.1H8.8z" />
+          </svg>
+          2
+        </span>
+        <span>Thu 19 Aug</span>
+      </div>
+    </div>
+
+    <main class="wrap">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">macOS menu bar · GitHub Actions</p>
+          <h1>GitHub Actions, in your menu bar.</h1>
+          <p class="lede">
+            Watch the repos you ship. Pin Deploy to prod so it never drowns in someone else’s CI.
+            Filter to your commits, PRs, and dispatches. RunBar uses the <code>gh</code> session
+            already on your Mac.
+          </p>
+          <ul class="meta">
+            <li>macOS 14+</li>
+            <li>Free &amp; open source</li>
+            <li>No tokens stored</li>
+          </ul>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/bryaneaton13/gh-actions-runbar#install">Install from source</a>
+            <a class="btn btn-ghost" href="https://github.com/bryaneaton13/gh-actions-runbar">Source on GitHub</a>
+          </div>
+          <div class="install">
+            <div class="install-head">
+              <span>build on your Mac</span>
+              <button class="copy" type="button" id="copy-install">Copy</button>
+            </div>
+            <pre id="install-cmd">git clone https://github.com/bryaneaton13/gh-actions-runbar.git
+cd gh-actions-runbar
+make install
+open ~/Applications/RunBar.app</pre>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <img src="./assets/screenshot.svg" width="880" height="720" alt="RunBar panel with a pinned Deploy failure, two running jobs, and recent Actions" />
+        </div>
+      </section>
+
+      <section class="features">
+        <article class="card">
+          <span class="job-id">check / status</span>
+          <h2>Live running and fail state</h2>
+          <p>The bar shows a count while jobs are in progress and tints red after a watched failure, including pinned deploys that failed hours ago.</p>
+        </article>
+        <article class="card">
+          <span class="job-id">workflow / pin</span>
+          <h2>Pins for Deploy to prod</h2>
+          <p>Pinned workflows ignore actor and event filters, so the run that actually ships stays at the top of the panel.</p>
+        </article>
+        <article class="card">
+          <span class="job-id">filter / actor</span>
+          <h2>Your runs, not the whole org</h2>
+          <p>Limit the list to the commits, pull requests, and workflow_dispatch jobs you triggered.</p>
+        </article>
+      </section>
+
+      <section class="privacy">
+        <div>
+          <h2>Privacy</h2>
+          <p>
+            RunBar shells out to the GitHub CLI. It does not store a token or password. Settings live
+            in <code>~/.config/runbar/config.json</code>. It does not crawl your disk.
+            <a href="https://github.com/bryaneaton13/gh-actions-runbar/blob/main/docs/privacy.md">Read the privacy notes</a>.
+          </p>
+        </div>
+        <div>
+          <h2>You need gh</h2>
+          <p>
+            Install with <code>brew install gh</code>, then <code>gh auth login</code>. First launch
+            shows a copy-able command if <code>gh</code> is missing or signed out.
+            <a href="https://github.com/bryaneaton13/gh-actions-runbar/blob/main/docs/getting-started.md">Getting started</a>.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      <span>MIT · Bryan Eaton</span>
+      <nav>
+        <a href="https://github.com/bryaneaton13/gh-actions-runbar">GitHub</a>
+        <a href="https://github.com/bryaneaton13/gh-actions-runbar/blob/main/CHANGELOG.md">Changelog</a>
+        <a href="https://github.com/bryaneaton13/gh-actions-runbar/blob/main/LICENSE">License</a>
+      </nav>
+    </footer>
+
+    <script>
+      const button = document.getElementById("copy-install");
+      const command = document.getElementById("install-cmd").textContent;
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(command);
+          button.textContent = "Copied";
+          button.classList.add("copied");
+          setTimeout(() => {
+            button.textContent = "Copy";
+            button.classList.remove("copied");
+          }, 1500);
+        } catch {
+          button.textContent = "Copy failed";
+        }
+      });
+    </script>
+  </body>
+</html>

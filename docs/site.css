@@ -1,0 +1,311 @@
+/* RunBar site — CI check-run on a dim Mac desktop, not a generic SaaS landing. */
+
+:root {
+  --night: #12141a;
+  --desk: #171b22;
+  --panel: #1c2028;
+  --hair: #30363d;
+  --paper: #e6edf3;
+  --muted: #8b949e;
+  --running: #d29922;
+  --success: #3fb950;
+  --failure: #f85149;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--night);
+}
+
+body {
+  margin: 0;
+  color: var(--paper);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.5;
+  background:
+    radial-gradient(1200px 500px at 80% -10%, rgba(210, 153, 34, 0.12), transparent 55%),
+    var(--night);
+}
+
+a {
+  color: var(--paper);
+}
+
+a:hover {
+  color: var(--running);
+}
+
+:focus-visible {
+  outline: 2px solid var(--running);
+  outline-offset: 3px;
+}
+
+.menubar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 18px;
+  background: #0e1116;
+  border-bottom: 1px solid var(--hair);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.menubar-left,
+.menubar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.status-bolt {
+  width: 14px;
+  height: 14px;
+  color: var(--running);
+}
+
+.wrap {
+  width: min(1080px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 460px);
+  gap: 48px;
+  align-items: center;
+  padding: 72px 0 48px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--running);
+}
+
+h1 {
+  margin: 0 0 16px;
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.lede {
+  margin: 0 0 28px;
+  max-width: 38rem;
+  color: var(--muted);
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.btn-primary {
+  background: var(--running);
+  color: #12141a;
+}
+
+.btn-primary:hover {
+  color: #12141a;
+  filter: brightness(1.08);
+}
+
+.btn-ghost {
+  border: 1px solid var(--hair);
+  background: transparent;
+  color: var(--paper);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.meta li::before {
+  content: "●";
+  margin-right: 8px;
+  color: var(--success);
+}
+
+.install {
+  border: 1px solid var(--hair);
+  background: var(--panel);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.install-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--hair);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.copy {
+  border: 0;
+  background: transparent;
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.copy.copied {
+  color: var(--success);
+}
+
+.install pre {
+  margin: 0;
+  padding: 14px 16px 16px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--paper);
+}
+
+.hero-visual img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  padding: 12px 0 56px;
+}
+
+.card {
+  padding: 22px 22px 20px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.job-id {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--running);
+}
+
+.privacy {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding: 28px 0 72px;
+  border-top: 1px solid var(--hair);
+}
+
+.privacy h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.privacy p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.privacy a {
+  color: var(--running);
+}
+
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 0 40px;
+  border-top: 1px solid var(--hair);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+footer nav {
+  display: flex;
+  gap: 16px;
+}
+
+footer a {
+  color: var(--muted);
+}
+
+@media (max-width: 860px) {
+  .hero,
+  .features,
+  .privacy {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding-top: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
