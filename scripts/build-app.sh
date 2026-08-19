@@ -20,9 +20,10 @@ if [[ ! -f "$ICON_SOURCE" ]]; then
 fi
 
 echo "Building $APP_NAME ${MARKETING_VERSION} (${BUILD_NUMBER})…"
-swift build -c release --product RunBar
+# --disable-sandbox: SwiftPM's sandbox-exec cannot nest inside Homebrew's build sandbox.
+swift build --disable-sandbox -c release --product RunBar
 
-BIN="$(swift build -c release --show-bin-path)/RunBar"
+BIN="$(swift build --disable-sandbox -c release --show-bin-path)/RunBar"
 if [[ ! -x "$BIN" ]]; then
   echo "Release binary not found at $BIN" >&2
   exit 1
