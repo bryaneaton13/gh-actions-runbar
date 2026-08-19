@@ -22,12 +22,7 @@ brew install bryaneaton13/tap/runbar
 open "$(brew --prefix runbar)/RunBar.app"
 ```
 
-Launch at login (`SMAppService`) wants an Applications folder path:
-
-```bash
-mkdir -p ~/Applications
-ln -sf "$(brew --prefix runbar)/RunBar.app" ~/Applications/RunBar.app
-```
+The formula links `~/Applications/RunBar.app` so Spotlight, Raycast, and launch at login (`SMAppService`) see it.
 
 From a clone, `make install` copies `RunBar.app` into `~/Applications` directly.
 

@@ -25,14 +25,7 @@ brew install bryaneaton13/tap/runbar
 open "$(brew --prefix runbar)/RunBar.app"
 ```
 
-That formula compiles RunBar on your Mac. There is no notarized download, so Gatekeeper is not in the way.
-
-Launch at login wants the app under Applications:
-
-```bash
-mkdir -p ~/Applications
-ln -sf "$(brew --prefix runbar)/RunBar.app" ~/Applications/RunBar.app
-```
+That formula compiles RunBar on your Mac and links `~/Applications/RunBar.app` so Spotlight, Raycast, and launch at login see it. There is no notarized download, so Gatekeeper is not in the way.
 
 Or clone and `make install`, which copies `RunBar.app` into `~/Applications` directly.
 
