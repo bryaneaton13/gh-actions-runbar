@@ -45,7 +45,7 @@ Letter-spacing stays at 0. Do not uppercase the whole page or track out small la
 - **Section gap:** 48px desktop, 32px tablet, 24px mobile
 - **Content width:** 1120px, 24px side gutters (40px on small screens)
 - **Hero:** two columns. Copy left, running screenshot on `{colors.studio}` right. Collapse to one column under 860px, copy first.
-- **Failure shot:** same two-column grammar after the hero. “Running count, then red” left, `screenshot-failure.png` on studio gray right.
+- **Failure shot:** same two-column grammar after Privacy / You need gh. “Running count, then red” left, `screenshot-failure.png` on studio gray right. Keep it below the fold so the hero, pins, and `gh` notes stay on the first screen.
 - **Whitespace** separates sections. It is not padding inside cards. Sections meet at a hairline, not a colored block.
 
 ## Shape and depth
@@ -64,7 +64,7 @@ Letter-spacing stays at 0. Do not uppercase the whole page or track out small la
 
 **Screenshot stage.** `{colors.studio}` field, 48px padding, image centered at its native portrait crop. Hero uses `docs/assets/screenshot.png` (391×524, running). The failure band uses `docs/assets/screenshot-failure.png` (426×537). Do not draw a fake menu bar around either.
 
-**Feature row.** Two columns of plain text on canvas after the failure shot (Pins, Your runs). Title `{typography.heading}`, body `{colors.mute}`. No cards, no numbered markers, no `job / id` eyebrows.
+**Feature row.** Two columns of plain text on canvas after the hero (Pins, Your runs). Title `{typography.heading}`, body `{colors.mute}`. No cards, no numbered markers, no `job / id` eyebrows.
 
 **Footer.** Hairline above. Caption text. Links in `{colors.mute}`, underline on hover.
 
@@ -97,6 +97,6 @@ Hero lockup: "GitHub Actions, in your menu bar."
 
 | Width | Layout |
 | --- | --- |
-| 1120px+ | Two-column hero, two-column failure shot, two feature columns, two-column privacy row |
+| 1120px+ | Two-column hero, two feature columns, two-column privacy row, two-column failure shot last |
 | 860px | Single column, 32px section gap, screenshot under the install block |
 | 600px | Display type ~48px, pills still 48px tall, code block scrolls horizontally |
