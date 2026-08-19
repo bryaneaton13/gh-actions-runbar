@@ -4,14 +4,22 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# shellcheck disable=SC1091
+source "$ROOT/version.env"
+
 APP_NAME="RunBar"
 BUNDLE_ID="dev.runbar.app"
 DIST="$ROOT/dist"
 APP="$DIST/$APP_NAME.app"
 MACOS="$APP/Contents/MacOS"
 RESOURCES="$APP/Contents/Resources"
+ICON_SOURCE="$ROOT/Resources/AppIcon.icns"
 
-echo "Building $APP_NAME release…"
+if [[ ! -f "$ICON_SOURCE" ]]; then
+  "$ROOT/scripts/build-icon.sh"
+fi
+
+echo "Building $APP_NAME ${MARKETING_VERSION} (${BUILD_NUMBER})…"
 swift build -c release --product RunBar
 
 BIN="$(swift build -c release --show-bin-path)/RunBar"
@@ -24,6 +32,7 @@ rm -rf "$APP"
 mkdir -p "$MACOS" "$RESOURCES"
 
 cp "$BIN" "$MACOS/$APP_NAME"
+cp "$ICON_SOURCE" "$RESOURCES/AppIcon.icns"
 
 cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -34,6 +43,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <string>en</string>
   <key>CFBundleExecutable</key>
   <string>${APP_NAME}</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundleIdentifier</key>
   <string>${BUNDLE_ID}</string>
   <key>CFBundleInfoDictionaryVersion</key>
@@ -43,9 +54,9 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>${MARKETING_VERSION}</string>
   <key>CFBundleVersion</key>
-  <string>1</string>
+  <string>${BUILD_NUMBER}</string>
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>LSUIElement</key>

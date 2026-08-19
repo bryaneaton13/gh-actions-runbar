@@ -17,6 +17,7 @@ struct SettingsView: View {
                 filtersSection
                 pinsSection
                 generalSection
+                aboutSection
             }
             .formStyle(.grouped)
             .navigationTitle("Settings")
@@ -200,6 +201,39 @@ struct SettingsView: View {
                 let directory = SettingsStore.configDirectory
                 try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                 NSWorkspace.shared.open(directory)
+            }
+        }
+    }
+
+    private var aboutSection: some View {
+        Section("About") {
+            LabeledContent("Version") {
+                Text(AppInfo.marketingVersion)
+                    .font(.body.monospaced())
+            }
+
+            Button {
+                NSWorkspace.shared.open(AppInfo.websiteURL)
+            } label: {
+                Label("Website", systemImage: "safari")
+            }
+
+            Button {
+                NSWorkspace.shared.open(AppInfo.githubURL)
+            } label: {
+                Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+            }
+
+            Button {
+                NSWorkspace.shared.open(AppInfo.privacyURL)
+            } label: {
+                Label("Privacy", systemImage: "hand.raised")
+            }
+
+            Button {
+                NSWorkspace.shared.open(AppInfo.licenseURL)
+            } label: {
+                Label("License (MIT)", systemImage: "doc.text")
             }
         }
     }

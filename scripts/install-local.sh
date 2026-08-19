@@ -15,4 +15,5 @@ rm -rf "$DEST/RunBar.app"
 cp -R "$APP" "$DEST/RunBar.app"
 
 echo "Installed $DEST/RunBar.app"
+echo "Launch-at-login works from this Applications folder location."
 echo "Open it with: open ~/Applications/RunBar.app"

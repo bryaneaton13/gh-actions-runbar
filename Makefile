@@ -1,4 +1,4 @@
-.PHONY: build run test app install clean
+.PHONY: build run test app install icon clean
 
 build:
 	swift build
@@ -8,6 +8,9 @@ run:
 
 test:
 	swift run RunBarCoreChecks
+
+icon:
+	./scripts/build-icon.sh
 
 app:
 	./scripts/build-app.sh

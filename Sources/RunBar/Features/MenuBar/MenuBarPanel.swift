@@ -160,10 +160,11 @@ struct MenuBarPanel: View {
 
             HStack(spacing: 14) {
                 FooterLink(title: "Settings", systemName: "gearshape", action: openSettings)
+                FooterLink(title: "Website", systemName: "safari") {
+                    NSWorkspace.shared.open(AppInfo.websiteURL)
+                }
                 FooterLink(title: "GitHub", systemName: "arrow.up.right.square") {
-                    if let url = URL(string: "https://github.com") {
-                        NSWorkspace.shared.open(url)
-                    }
+                    NSWorkspace.shared.open(AppInfo.githubURL)
                 }
                 Spacer(minLength: 0)
                 FooterLink(title: "Quit", systemName: "power") {
@@ -388,6 +389,7 @@ private struct SetupCard: View {
     let title: String
     let message: String
     let command: String
+    @State private var copied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -404,19 +406,34 @@ private struct SetupCard: View {
                 }
             }
 
-            Text(command)
-                .font(.system(.caption, design: .monospaced))
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(.quaternary.opacity(0.4))
-                )
-                .onTapGesture {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(command, forType: .string)
+            HStack {
+                Text(command)
+                    .font(.system(.caption, design: .monospaced))
+                    .lineLimit(1)
+                Spacer(minLength: 8)
+                Text(copied ? "Copied" : "Copy")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(copied ? RunBarTheme.success : .secondary)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(.quaternary.opacity(0.4))
+            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(command, forType: .string)
+                copied = true
+                Task {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    copied = false
                 }
-                .help("Click to copy")
+            }
+            .help(copied ? "Copied" : "Click to copy")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(copied ? "Copied \(command)" : "Copy \(command)")
         }
     }
 }
