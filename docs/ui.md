@@ -183,7 +183,7 @@ Short, specific, present tense. Name `gh`, the workflow, the repo.
 - Keep pins at the top and filters off those rows.
 - Tint the bar on a pinned failure even when that run is hours old.
 - Use system material so the panel sits on the desktop like Control Center, not a floating dark card.
-- After panel changes, update `docs/assets/screenshot.png` (in-situ crop: bar + hanging panel).
+- After panel changes, update `docs/assets/screenshot.png` (in-situ crop: bar + hanging panel) and `docs/assets/screenshot-failure.png` (failure headline, no need for the bar crop).
 
 ## Don’t
 

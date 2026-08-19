@@ -22,7 +22,7 @@ Requires macOS 14+ (Sonoma), [GitHub CLI](https://cli.github.com/) (`gh`), and S
 brew install gh
 gh auth login
 brew install bryaneaton13/tap/runbar
-open "$(brew --prefix runbar)/RunBar.app"
+runbar
 ```
 
 That formula compiles RunBar on your Mac. Run `runbar` once to open it and link `~/Applications/RunBar.app` (Spotlight, Raycast, launch at login). There is no notarized download, so Gatekeeper is not in the way.

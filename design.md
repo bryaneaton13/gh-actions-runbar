@@ -4,7 +4,7 @@ Marketing page only (GitHub Pages + README chrome). The menu bar panel is [`docs
 
 The screenshot is the product. Chrome stays out of the way.
 
-The GitHub Pages site and README should read like a printed catalog page for a Mac utility: one large lockup, one photograph of the panel, install commands, then a few short facts. No gradients, no card shadows, no accent color used for mood. Color in the screenshot (running yellow, success green, fail red) is enough.
+The GitHub Pages site and README should read like a printed catalog page for a Mac utility: one large lockup, a photograph of the running panel, install commands, then a few short facts. A second studio shot shows the failure tint. No gradients, no card shadows, no accent color used for mood. Color in the screenshots (running yellow, success green, fail red) is enough.
 
 ## Palette
 
@@ -44,7 +44,8 @@ Letter-spacing stays at 0. Do not uppercase the whole page or track out small la
 - **Base unit:** 8px
 - **Section gap:** 48px desktop, 32px tablet, 24px mobile
 - **Content width:** 1120px, 24px side gutters (40px on small screens)
-- **Hero:** two columns. Copy left, screenshot on `{colors.studio}` right. Collapse to one column under 860px, copy first.
+- **Hero:** two columns. Copy left, running screenshot on `{colors.studio}` right. Collapse to one column under 860px, copy first.
+- **Failure shot:** same two-column grammar after the hero. “Running count, then red” left, `screenshot-failure.png` on studio gray right.
 - **Whitespace** separates sections. It is not padding inside cards. Sections meet at a hairline, not a colored block.
 
 ## Shape and depth
@@ -61,9 +62,9 @@ Letter-spacing stays at 0. Do not uppercase the whole page or track out small la
 
 **Install block.** `{colors.studio}` fill, no radius, no border. Caption row on top with a text-only Copy control. Preformatted commands in `{typography.code}` `{colors.ink}`.
 
-**Screenshot stage.** `{colors.studio}` field, 48px padding, image centered at its native portrait crop (`docs/assets/screenshot.png`, 391×524). Do not draw a fake menu bar around it.
+**Screenshot stage.** `{colors.studio}` field, 48px padding, image centered at its native portrait crop. Hero uses `docs/assets/screenshot.png` (391×524, running). The failure band uses `docs/assets/screenshot-failure.png` (426×537). Do not draw a fake menu bar around either.
 
-**Feature row.** Three columns of plain text on canvas. Title `{typography.heading}`, body `{colors.mute}`. No cards, no numbered markers, no `job / id` eyebrows.
+**Feature row.** Two columns of plain text on canvas after the failure shot (Pins, Your runs). Title `{typography.heading}`, body `{colors.mute}`. No cards, no numbered markers, no `job / id` eyebrows.
 
 **Footer.** Hairline above. Caption text. Links in `{colors.mute}`, underline on hover.
 
@@ -79,7 +80,7 @@ Hero lockup: "GitHub Actions, in your menu bar."
 
 ## Do
 
-- Put the real panel screenshot in the hero and the README. Update `docs/assets/screenshot.png` when the UI changes.
+- Put the running panel screenshot in the hero and the README. Put the failure crop next to “Running count, then red.” Update both `docs/assets/screenshot.png` and `docs/assets/screenshot-failure.png` when the UI changes.
 - Keep one black pill in the first screen.
 - Use studio gray as the photograph backdrop, the same way a product shot sits on a seamless.
 - Match this page on GitHub Pages (`docs/index.html`, `docs/site.css`). Markdown docs stay plain.
@@ -96,6 +97,6 @@ Hero lockup: "GitHub Actions, in your menu bar."
 
 | Width | Layout |
 | --- | --- |
-| 1120px+ | Two-column hero, three feature columns, two-column privacy row |
+| 1120px+ | Two-column hero, two-column failure shot, two feature columns, two-column privacy row |
 | 860px | Single column, 32px section gap, screenshot under the install block |
 | 600px | Display type ~48px, pills still 48px tall, code block scrolls horizontally |

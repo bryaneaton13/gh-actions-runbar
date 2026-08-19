@@ -19,7 +19,7 @@ Homebrew compiles RunBar on your Mac (no notarized download):
 
 ```bash
 brew install bryaneaton13/tap/runbar
-open "$(brew --prefix runbar)/RunBar.app"
+runbar
 ```
 
 Run `runbar` once. That opens the app and links `~/Applications/RunBar.app` so Spotlight, Raycast, and launch at login (`SMAppService`) see it.

@@ -44,7 +44,7 @@
               <button class="copy" type="button" id="copy-install" aria-live="polite">Copy</button>
             </div>
             <pre id="install-cmd">brew install bryaneaton13/tap/runbar
-open "$(brew --prefix runbar)/RunBar.app"</pre>
+runbar</pre>
           </div>
         </div>
         <figure class="hero-visual">
@@ -57,14 +57,25 @@ open "$(brew --prefix runbar)/RunBar.app"</pre>
         </figure>
       </section>
 
-      <section class="features">
-        <article>
+      <section class="feature-shot">
+        <div class="feature-shot-copy">
           <h2>Running count, then red</h2>
           <p>
             The bar shows how many jobs are in progress. It tints red after a
             watched failure, including a pinned deploy that failed hours ago.
           </p>
-        </article>
+        </div>
+        <figure class="hero-visual">
+          <img
+            src="./assets/screenshot-failure.png"
+            width="426"
+            height="537"
+            alt="RunBar panel with 1 recent failure: Playwright E2E failed on TangoGroup/360-hummingbird, pinned deploys still green"
+          />
+        </figure>
+      </section>
+
+      <section class="features">
         <article>
           <h2>Pins stay on top</h2>
           <p>

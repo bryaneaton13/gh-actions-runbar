@@ -22,6 +22,6 @@ make icon      # regenerate Resources/AppIcon.icns
 
 Config while developing: `UserDefaults` key `runbar.settings` and `~/.config/runbar/config.json` (directory `0700`, file `0600`).
 
-GitHub Pages lives in `docs/` (`index.html`, `site.css`). Visual rules for that page are in [`design.md`](../design.md). The menu bar panel is [`ui.md`](ui.md). The panel screenshot is `docs/assets/screenshot.png`.
+GitHub Pages lives in `docs/` (`index.html`, `site.css`). Visual rules for that page are in [`design.md`](../design.md). The menu bar panel is [`ui.md`](ui.md). Panel screenshots are `docs/assets/screenshot.png` (running) and `docs/assets/screenshot-failure.png`.
 
 The Homebrew formula lives in a separate tap, [bryaneaton13/homebrew-tap](https://github.com/bryaneaton13/homebrew-tap). It runs `make app` and installs `dist/RunBar.app` into the keg. Homebrew’s install sandbox cannot write `~/Applications`, so the `runbar` wrapper (and the app on launch) creates that symlink. Do not copy into `/Applications` from the formula.

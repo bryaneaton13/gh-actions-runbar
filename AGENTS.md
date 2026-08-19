@@ -47,7 +47,7 @@ Keep GitHub JSON, filtering, grouping, and `ActivitySummary` in RunBarCore. View
 - Panel layout: [`docs/ui.md`](docs/ui.md) (CodexBar grammar: identity / scan / commands). Site: [`design.md`](design.md).
 - Run colors live in `RunBarTheme` (success / failure / in-progress). Do not add a brand yellow to chrome.
 - Copy is short, specific, present tense. Name the thing (`gh`, Deploy to prod, `make install`). Skip “tiny / delightful / powerful”.
-- After panel UI changes, update `docs/assets/screenshot.png`.
+- After panel UI changes, update `docs/assets/screenshot.png` and `docs/assets/screenshot-failure.png`.
 
 ## Site
 
