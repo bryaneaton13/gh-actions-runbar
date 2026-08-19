@@ -17,3 +17,4 @@ All notable changes to RunBar are documented here.
 - Adaptive polling: 15s while the panel is open or a run is active, 45s when idle, paused while the Mac is asleep.
 - Settings for repositories (personal, org, and collaborator), event filters, pins, and launch at login.
 - Config mirrored to `~/.config/runbar/config.json`.
+- Homebrew formula: `brew install bryaneaton13/tap/runbar` compiles on your Mac.

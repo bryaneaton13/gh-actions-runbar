@@ -16,18 +16,25 @@ The bar shows a live running count and turns red after a watched failure, includ
 
 ## Install
 
-Requires macOS 14+ (Sonoma), [GitHub CLI](https://cli.github.com/) (`gh`), and Swift 6 / Xcode Command Line Tools to build.
+Requires macOS 14+ (Sonoma), [GitHub CLI](https://cli.github.com/) (`gh`), and Swift 6 / Xcode Command Line Tools to compile.
 
 ```bash
 brew install gh
 gh auth login
-git clone https://github.com/bryaneaton13/gh-actions-runbar.git
-cd gh-actions-runbar
-make install
-open ~/Applications/RunBar.app
+brew install bryaneaton13/tap/runbar
+open "$(brew --prefix runbar)/RunBar.app"
 ```
 
-RunBar is built on your Mac. There is no notarized download yet, so Gatekeeper is not in the way of a local `make install`.
+That formula compiles RunBar on your Mac. There is no notarized download, so Gatekeeper is not in the way.
+
+Launch at login wants the app under Applications:
+
+```bash
+mkdir -p ~/Applications
+ln -sf "$(brew --prefix runbar)/RunBar.app" ~/Applications/RunBar.app
+```
+
+Or clone and `make install`, which copies `RunBar.app` into `~/Applications` directly.
 
 ## First run
 
@@ -47,6 +54,7 @@ RunBar reuses your existing `gh` session. It does not store a GitHub token or pa
 - [Architecture](docs/architecture.md)
 - [Development](docs/development.md)
 - [Releasing](docs/releasing.md)
+- [Homebrew tap](https://github.com/bryaneaton13/homebrew-tap)
 - [Changelog](CHANGELOG.md)
 - [Website](https://bryaneaton13.github.io/gh-actions-runbar/)
 

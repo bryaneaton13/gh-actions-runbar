@@ -20,4 +20,4 @@ RunBar is a local menu bar app. It does not have its own GitHub account, OAuth a
 
 ## Permissions
 
-RunBar is a menu bar accessory (`LSUIElement`). Launch at login uses `SMAppService` and only applies when the app lives under Applications (this project installs to `~/Applications`).
+RunBar is a menu bar accessory (`LSUIElement`). Launch at login uses `SMAppService` and only applies when the app lives under Applications. `make install` copies the bundle to `~/Applications`. The Homebrew formula installs into the Cellar; symlink `$(brew --prefix runbar)/RunBar.app` into `~/Applications` if you want login launch.

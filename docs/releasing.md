@@ -1,6 +1,6 @@
 # Releasing
 
-No notarized zip and no Homebrew cask yet. A release is a git tag plus a changelog entry.
+No notarized zip and no Homebrew cask. A release is a git tag, a changelog entry, and a bump of the formula in [bryaneaton13/homebrew-tap](https://github.com/bryaneaton13/homebrew-tap).
 
 ## Checklist
 
@@ -16,4 +16,6 @@ git tag v0.1.0
 git push origin main --tags
 ```
 
-Do not attach an unsigned `.app` zip to GitHub Releases as a download. Gatekeeper will block it. Install remains `make install` from source until there is a Developer ID for notarization. `scripts/build-app.sh` ad-hoc signs the local app; do not swallow codesign failures.
+7. Update `Formula/runbar.rb` in the tap: set `url` to the new tag tarball and `sha256` from `./scripts/homebrew-sha.sh`. Do not add a `bottle` block. Commit and push the tap.
+
+Do not attach an unsigned `.app` zip to GitHub Releases as a download. Gatekeeper will block it. Install is `brew install bryaneaton13/tap/runbar` or `make install` until there is a Developer ID for notarization. `scripts/build-app.sh` ad-hoc signs the local app; do not swallow codesign failures.

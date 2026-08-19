@@ -35,7 +35,7 @@
             <code>gh</code> session already on your Mac.
           </p>
           <div class="cta-row">
-            <a class="btn btn-primary" href="#install">Install from source</a>
+            <a class="btn btn-primary" href="#install">Install with Homebrew</a>
             <a class="btn btn-secondary" href="https://github.com/bryaneaton13/gh-actions-runbar">Source on GitHub</a>
           </div>
           <div class="install" id="install">
@@ -43,10 +43,8 @@
               <span>on your Mac</span>
               <button class="copy" type="button" id="copy-install" aria-live="polite">Copy</button>
             </div>
-            <pre id="install-cmd">git clone https://github.com/bryaneaton13/gh-actions-runbar.git
-cd gh-actions-runbar
-make install
-open ~/Applications/RunBar.app</pre>
+            <pre id="install-cmd">brew install bryaneaton13/tap/runbar
+open "$(brew --prefix runbar)/RunBar.app"</pre>
           </div>
         </div>
         <figure class="hero-visual">

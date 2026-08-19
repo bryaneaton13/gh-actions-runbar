@@ -71,7 +71,7 @@ Letter-spacing stays at 0. Do not uppercase the whole page or track out small la
 
 ## Copy
 
-Write like the README: short, specific, present tense. Name the thing (`gh`, Deploy to prod, `make install`). Do not sell the category.
+Write like the README: short, specific, present tense. Name the thing (`gh`, Deploy to prod, `brew install bryaneaton13/tap/runbar`). Do not sell the category.
 
 Avoid: yellow tracked eyebrows, simulated macOS chrome, "tiny" / "delightful" / "powerful", decorative monospace labels on feature blocks, three stacked metaphors for the same idea.
 

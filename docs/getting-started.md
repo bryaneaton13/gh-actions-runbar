@@ -15,14 +15,21 @@ The default `gh` scopes are enough to list repositories and workflow runs you ca
 
 ## 2. Install RunBar
 
-You build RunBar locally (no notarized download yet). From the repo:
+Homebrew compiles RunBar on your Mac (no notarized download):
 
 ```bash
-make install
-open ~/Applications/RunBar.app
+brew install bryaneaton13/tap/runbar
+open "$(brew --prefix runbar)/RunBar.app"
 ```
 
-That copies `RunBar.app` into `~/Applications`, which is where launch-at-login is reliable.
+Launch at login (`SMAppService`) wants an Applications folder path:
+
+```bash
+mkdir -p ~/Applications
+ln -sf "$(brew --prefix runbar)/RunBar.app" ~/Applications/RunBar.app
+```
+
+From a clone, `make install` copies `RunBar.app` into `~/Applications` directly.
 
 ## 3. Add repositories
 

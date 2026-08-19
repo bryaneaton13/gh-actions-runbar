@@ -55,7 +55,7 @@ Pages are `docs/index.html` + `docs/site.css`. Follow `design.md`: ink / canvas 
 
 ## Release
 
-Bump `version.env`, add user-facing bullets to `CHANGELOG.md`, keep `AppInfo.fallbackVersion` in sync. Do not attach an unsigned `.app` zip to GitHub Releases — Gatekeeper will block it. Install remains `make install` until there is Developer ID notarization.
+Bump `version.env`, add user-facing bullets to `CHANGELOG.md`, keep `AppInfo.fallbackVersion` in sync. After tagging, update `url` / `sha256` in [bryaneaton13/homebrew-tap](https://github.com/bryaneaton13/homebrew-tap) `Formula/runbar.rb` (`./scripts/homebrew-sha.sh`). Do not bottle unsigned builds. Do not attach an unsigned `.app` zip to GitHub Releases — Gatekeeper will block it. Install is `brew install bryaneaton13/tap/runbar` or `make install` until there is Developer ID notarization.
 
 ## Do not
 
