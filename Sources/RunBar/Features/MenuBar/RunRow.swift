@@ -118,7 +118,7 @@ struct PinRow: View {
         if let run = snapshot.latestRun {
             RunRow(run: run, referenceDate: referenceDate, repositoryLabel: snapshot.pin.repository.fullName)
                 .overlay {
-                    if snapshot.hasFailedLatestRun {
+                    if run.displayState == .failed {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .stroke(RunBarTheme.failure.opacity(0.55), lineWidth: 1)
                     }

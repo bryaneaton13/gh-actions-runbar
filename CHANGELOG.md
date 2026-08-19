@@ -2,6 +2,13 @@
 
 All notable changes to RunBar are documented here.
 
+## 0.2.0 — 2026-08-19
+
+### Features
+
+- Settings toggle **Show everyone's runs** on pinned workflows (on by default). Pins still ignore event filters; when this is on, `gh run list -w` skips `-u` so you see Deploy to prod (and other pins) when someone else triggers them.
+- Pinned workflows can show several recent runs, not only the latest, and the row names the GitHub user who triggered each run.
+
 ## 0.1.0 — 2026-08-19
 
 ### Highlights

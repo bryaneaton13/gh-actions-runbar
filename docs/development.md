@@ -18,7 +18,7 @@ make icon      # regenerate Resources/AppIcon.icns
 - `Sources/RunBar` — SwiftUI menu bar + settings
 - `Sources/RunBarCore` — models, `gh` client, polling policy, settings store
 - `scripts/build-app.sh` — release binary, Info.plist, ad-hoc sign
-- `version.env` — `MARKETING_VERSION` and `BUILD_NUMBER` used by the bundle
+- `version.env` — `MARKETING_VERSION` and `BUILD_NUMBER` used by the bundle. Bump both for a release; CI tags `v{version}` after checks are green. See [Releasing](releasing.md).
 
 Config while developing: `UserDefaults` key `runbar.settings` and `~/.config/runbar/config.json` (directory `0700`, file `0600`).
 

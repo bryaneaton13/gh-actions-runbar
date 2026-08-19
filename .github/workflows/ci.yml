@@ -15,3 +15,34 @@ jobs:
         run: swift --version
       - name: Run checks
         run: swift run RunBarCoreChecks
+
+  tag:
+    name: Tag release
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub Release when MARKETING_VERSION is new
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          source version.env
+          TAG="v${MARKETING_VERSION}"
+          if [[ ! "$MARKETING_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Skip: MARKETING_VERSION is not MAJOR.MINOR.PATCH"
+            exit 0
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists"
+            exit 0
+          fi
+          NOTES="$(./scripts/release-notes.sh)"
+          gh release create "$TAG" \
+            --title "RunBar ${MARKETING_VERSION}" \
+            --notes "$NOTES"
+

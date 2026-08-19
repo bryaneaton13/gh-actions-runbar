@@ -10,11 +10,11 @@ public struct MergedRuns: Equatable, Sendable {
     }
 
     public var pinnedRunIDs: Set<String> {
-        Set(pinned.compactMap(\.latestRun?.id))
+        Set(pinned.flatMap(\.runs).map(\.id))
     }
 
     public var allRuns: [WorkflowRun] {
-        pinned.compactMap(\.latestRun) + filtered
+        pinned.flatMap(\.runs) + filtered
     }
 }
 
@@ -49,14 +49,11 @@ public enum RunFilter {
     public static func merge(filtered: [WorkflowRun], pins: [PinSnapshot]) -> MergedRuns {
         var seen = Set<String>()
         let uniquePins: [PinSnapshot] = pins.map { snapshot in
-            guard let run = snapshot.latestRun else { return snapshot }
-            if seen.insert(run.id).inserted {
-                return snapshot
-            }
-            return PinSnapshot(pin: snapshot.pin, latestRun: nil)
+            let uniqueRuns = snapshot.runs.filter { seen.insert($0.id).inserted }
+            return PinSnapshot(pin: snapshot.pin, runs: uniqueRuns)
         }
 
-        let pinnedIDs = Set(uniquePins.compactMap(\.latestRun?.id))
+        let pinnedIDs = Set(uniquePins.flatMap(\.runs).map(\.id))
         let uniqueFiltered = filtered.filter { run in
             !pinnedIDs.contains(run.id) && seen.insert(run.id).inserted
         }

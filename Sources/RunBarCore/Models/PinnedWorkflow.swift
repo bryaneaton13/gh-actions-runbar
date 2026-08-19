@@ -16,14 +16,22 @@ public struct PinnedWorkflow: Codable, Hashable, Identifiable, Sendable {
 
 public struct PinSnapshot: Equatable, Sendable, Identifiable {
     public var pin: PinnedWorkflow
-    public var latestRun: WorkflowRun?
+    public var runs: [WorkflowRun]
+
+    public init(pin: PinnedWorkflow, runs: [WorkflowRun] = []) {
+        self.pin = pin
+        self.runs = runs
+    }
 
     public init(pin: PinnedWorkflow, latestRun: WorkflowRun?) {
-        self.pin = pin
-        self.latestRun = latestRun
+        self.init(pin: pin, runs: latestRun.map { [$0] } ?? [])
     }
 
     public var id: String { pin.id }
+
+    public var latestRun: WorkflowRun? {
+        runs.max { $0.sortDate < $1.sortDate }
+    }
 
     public var hasFailedLatestRun: Bool {
         latestRun?.displayState == .failed

@@ -124,6 +124,11 @@ final class AppStore {
         persistAndRefresh()
     }
 
+    func setPinsIncludeAllActors(_ enabled: Bool) {
+        settings.pinsIncludeAllActors = enabled
+        persistAndRefresh()
+    }
+
     func setLaunchAtLogin(_ enabled: Bool) {
         settings.launchAtLogin = enabled
         settingsStore.save(settings)
@@ -226,7 +231,8 @@ final class AppStore {
             rule: settings.watchRule,
             login: login,
             runsPerRepo: settings.runsPerRepo,
-            pinnedRunsLimit: settings.pinnedRunsLimit
+            pinnedRunsLimit: settings.pinnedRunsLimit,
+            pinsIncludeAllActors: settings.pinsIncludeAllActors
         )
         snapshot = fetched
         summary = ActivitySummary(runs: uniqueRuns(from: fetched), pins: fetched.pinned)
@@ -239,7 +245,7 @@ final class AppStore {
     private func uniqueRuns(from snapshot: WorkflowSnapshot) -> [WorkflowRun] {
         var seen = Set<String>()
         var runs: [WorkflowRun] = []
-        for run in snapshot.pinned.compactMap(\.latestRun) + snapshot.activeRuns + snapshot.groups.flatMap(\.runs) {
+        for run in snapshot.pinned.flatMap(\.runs) + snapshot.activeRuns + snapshot.groups.flatMap(\.runs) {
             if seen.insert(run.id).inserted {
                 runs.append(run)
             }

@@ -56,8 +56,16 @@ enum RunBarCoreChecks {
             let decoded = try JSONDecoder().decode(AppSettings.self, from: Data(dirty.utf8))
             equal(decoded.repositories.map(\.fullName), ["acme/app"], "drop invalid repos")
             equal(decoded.pins.map(\.workflowName), ["Deploy"], "drop pins with invalid repos")
+            equal(decoded.pinsIncludeAllActors, true, "legacy settings include everyone's pin runs")
         } catch {
             check(false, "lossy settings decode: \(error)")
+        }
+
+        do {
+            let mineOnlyPins = try JSONDecoder().decode(AppSettings.self, from: Data(#"{"pinsIncludeAllActors":false}"#.utf8))
+            equal(mineOnlyPins.pinsIncludeAllActors, false, "decode Show everyone's runs off")
+        } catch {
+            check(false, "pinsIncludeAllActors decode: \(error)")
         }
 
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -205,13 +213,14 @@ enum RunBarCoreChecks {
         check(!RunFilter.matches(mine, rule: WatchRule(onlyMyRuns: false, events: []), login: nil), "empty events match nothing")
 
         let deploy = run(id: "100", actor: "sam", event: .workflowDispatch, name: "Deploy to prod")
+        let otherDeploy = run(id: "102", actor: "alex", event: .workflowDispatch, name: "Deploy to prod")
         let ci = run(id: "101", actor: "bryan", event: .pullRequest, name: "CI")
         let merged = RunFilter.merge(
-            filtered: [deploy, ci],
-            pins: [PinSnapshot(pin: PinnedWorkflow(repository: repo, workflowName: "Deploy to prod"), latestRun: deploy)]
+            filtered: [deploy, otherDeploy, ci],
+            pins: [PinSnapshot(pin: PinnedWorkflow(repository: repo, workflowName: "Deploy to prod"), runs: [deploy, otherDeploy])]
         )
-        equal(merged.pinned.first?.latestRun?.id, "100", "pinned keeps deploy")
-        equal(merged.filtered.map(\.id), ["101"], "filtered drops pinned id")
+        equal(merged.pinned.first?.runs.map(\.id), ["100", "102"], "pinned keeps every pin run")
+        equal(merged.filtered.map(\.id), ["101"], "filtered drops all pinned ids")
 
         let groups = RunGrouping.groups(
             from: [
@@ -277,14 +286,51 @@ enum RunBarCoreChecks {
             rule: WatchRule(onlyMyRuns: true, events: [.pullRequest, .push, .workflowDispatch]),
             login: "bryan",
             runsPerRepo: 8,
-            pinnedRunsLimit: 3
+            pinnedRunsLimit: 3,
+            pinsIncludeAllActors: true
         )
         let commands = await process.commands
         equal(snapshot.pinned.first?.latestRun?.workflowName, "Deploy to prod", "pin latest")
+        equal(snapshot.pinned.first?.runs.count, 2, "pin keeps everyone's recent runs")
+        equal(snapshot.pinned.first?.latestRun?.actor, "sam", "pin hydrates actor from gh api")
+        equal(snapshot.pinned.first?.runs.map(\.actor), ["sam", "bryan"], "pin rows show who triggered each run")
         equal(snapshot.activeRuns.map(\.id), ["101"], "active CI")
         equal(snapshot.groups.flatMap(\.runs).map(\.id), ["99"], "completed leftover")
-        check(commands.contains { $0.contains("-u") && $0.contains("bryan") }, "uses -u filter")
-        check(commands.contains { $0.contains("-w") && $0.contains("Deploy to prod") }, "uses -w pin")
+        check(commands.contains { $0.contains("-u") && $0.contains("bryan") && !$0.contains("-w") }, "repo list uses -u")
+        check(
+            commands.contains { $0.contains("-w") && $0.contains("Deploy to prod") && !$0.contains("-u") },
+            "pin skips -u when including everyone"
+        )
+        check(
+            commands.contains { command in
+                command.first == "api" && command.contains { $0.contains("repos/acme/app/actions/runs") }
+            },
+            "loads pin actors from gh api"
+        )
+
+        let mineOnlyProcess = FakeGhProcess()
+        let mineOnlyClient = GhClient(process: mineOnlyProcess)
+        let mineOnlySnapshot = await mineOnlyClient.fetchSnapshot(
+            repositories: [repo],
+            pins: [PinnedWorkflow(repository: repo, workflowName: "Deploy to prod")],
+            rule: WatchRule(onlyMyRuns: true, events: [.pullRequest, .push, .workflowDispatch]),
+            login: "bryan",
+            runsPerRepo: 8,
+            pinnedRunsLimit: 3,
+            pinsIncludeAllActors: false
+        )
+        let mineOnlyCommands = await mineOnlyProcess.commands
+        equal(mineOnlySnapshot.pinned.first?.runs.count, 1, "pin keeps latest when limited to my runs")
+        check(
+            mineOnlyCommands.contains { $0.contains("-w") && $0.contains("Deploy to prod") && $0.contains("-u") && $0.contains("bryan") },
+            "pin uses -u when Show everyone's runs is off"
+        )
+        check(
+            !mineOnlyCommands.contains { command in
+                command.first == "api" && command.contains { $0.contains("/actions/runs") }
+            },
+            "skips actor hydration when pins use -u"
+        )
 
         do {
             let payload = try GitHubJSON.decoder().decode([GhAccessibleRepoDTO].self, from: Data(accessibleRepoJSON.utf8))
@@ -406,6 +452,11 @@ private actor FakeGhProcess: GhRunning {
             return fixtureJSON
         }
         if arguments.first == "api",
+           arguments.contains(where: { $0.contains("/actions/runs") })
+        {
+            return actionsRunsJSON
+        }
+        if arguments.first == "api",
            arguments.contains(where: { $0.hasPrefix("user/repos") })
         {
             return accessibleRepoJSON
@@ -425,6 +476,20 @@ private actor FakeGhProcess: GhRunning {
 private let deployOnlyJSON = """
 [
   {
+    "databaseId": 102,
+    "workflowName": "Deploy to prod",
+    "displayTitle": "chore: release",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "workflow_dispatch",
+    "headBranch": "main",
+    "headSha": "aaa111",
+    "name": "Deploy to prod",
+    "startedAt": "2026-08-19T13:10:00Z",
+    "updatedAt": "2026-08-19T13:20:00Z",
+    "url": "https://github.com/acme/app/actions/runs/102"
+  },
+  {
     "databaseId": 100,
     "workflowName": "Deploy to prod",
     "displayTitle": "chore: release",
@@ -439,6 +504,21 @@ private let deployOnlyJSON = """
     "url": "https://github.com/acme/app/actions/runs/100"
   }
 ]
+"""
+
+private let actionsRunsJSON = """
+{
+  "workflow_runs": [
+    {
+      "id": 102,
+      "actor": { "login": "sam" }
+    },
+    {
+      "id": 100,
+      "actor": { "login": "bryan" }
+    }
+  ]
+}
 """
 
 private let searchRepoJSON = """

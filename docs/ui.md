@@ -157,7 +157,7 @@ While Refresh is in flight, the row label stays “Refresh” and a small `Progr
 
 Grouped `Form` in a window, not in the popover. Minimum ~540×520. Opened only from Settings….
 
-Sections, in order: Account, Repositories, Filters, Pins, General, About. About holds version, website, and source links.
+Sections, in order: Account, Repositories, Filters, Pins, General, About. Pins include **Show everyone's runs**. About holds version, website, and source links.
 
 ## Motion
 
@@ -180,7 +180,7 @@ Short, specific, present tense. Name `gh`, the workflow, the repo.
 
 ## Do
 
-- Keep pins at the top and filters off those rows.
+- Keep pins at the top. Event filters stay off those rows. **Show everyone's runs** (Settings → Pinned workflows, default on) is what includes other actors.
 - Tint the bar on a pinned failure even when that run is hours old.
 - Use system material so the panel sits on the desktop like Control Center, not a floating dark card.
 - After panel changes, update `docs/assets/screenshot.png` (in-situ crop: bar + hanging panel) and `docs/assets/screenshot-failure.png` (failure headline, no need for the bar crop).

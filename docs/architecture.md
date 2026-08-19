@@ -21,4 +21,4 @@ All GitHub access goes through `gh`. The GUI app looks for `/opt/homebrew/bin/gh
 
 Repository owner/name values are limited to GitHub’s identifier charset so they cannot be parsed as extra CLI flags. Run URLs from `gh` must be `https` on `github.com` before the panel will open them.
 
-Pins are fetched separately (`gh run list -w`) and ignore actor/event filters. The menu bar tints on recent failures **and** on a pinned workflow whose latest run failed, even if that run is older than the 30-minute recent window.
+Pins are fetched separately (`gh run list -w`) and ignore event filters. **Show everyone's runs** (default on) skips `-u` and keeps several recent runs per pin, including other actors. `gh run list` has no actor field, so pin rows read `actor.login` from `gh api repos/<owner>/<name>/actions/runs`. The menu bar tints on recent failures **and** on a pinned workflow whose latest run failed, even if that run is older than the 30-minute recent window.

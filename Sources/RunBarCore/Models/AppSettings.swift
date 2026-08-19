@@ -4,6 +4,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var repositories: [Repository]
     public var watchRule: WatchRule
     public var pins: [PinnedWorkflow]
+    public var pinsIncludeAllActors: Bool
     public var runsPerRepo: Int
     public var pinnedRunsLimit: Int
     public var launchAtLogin: Bool
@@ -12,6 +13,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         repositories: [Repository] = [],
         watchRule: WatchRule = .default,
         pins: [PinnedWorkflow] = [],
+        pinsIncludeAllActors: Bool = true,
         runsPerRepo: Int = 8,
         pinnedRunsLimit: Int = 3,
         launchAtLogin: Bool = false
@@ -19,6 +21,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.repositories = repositories
         self.watchRule = watchRule
         self.pins = pins
+        self.pinsIncludeAllActors = pinsIncludeAllActors
         self.runsPerRepo = runsPerRepo
         self.pinnedRunsLimit = pinnedRunsLimit
         self.launchAtLogin = launchAtLogin
@@ -30,6 +33,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         case repositories
         case watchRule
         case pins
+        case pinsIncludeAllActors
         case runsPerRepo
         case pinnedRunsLimit
         case launchAtLogin
@@ -46,6 +50,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
             repositories: uniqueRepos,
             watchRule: watchRule,
             pins: validPins,
+            pinsIncludeAllActors: pinsIncludeAllActors,
             runsPerRepo: max(runsPerRepo, 1),
             pinnedRunsLimit: max(pinnedRunsLimit, 1),
             launchAtLogin: launchAtLogin
@@ -59,6 +64,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         repositories = looseRepos.compactMap(\.repository)
         watchRule = try container.decodeIfPresent(WatchRule.self, forKey: .watchRule) ?? .default
         pins = loosePins.compactMap(\.pin)
+        pinsIncludeAllActors = try container.decodeIfPresent(Bool.self, forKey: .pinsIncludeAllActors) ?? true
         runsPerRepo = try container.decodeIfPresent(Int.self, forKey: .runsPerRepo) ?? 8
         pinnedRunsLimit = try container.decodeIfPresent(Int.self, forKey: .pinnedRunsLimit) ?? 3
         launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false

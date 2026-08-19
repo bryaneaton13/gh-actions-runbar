@@ -22,7 +22,7 @@ public struct WorkflowSnapshot: Sendable, Equatable {
     }
 
     public var allRuns: [WorkflowRun] {
-        pinned.compactMap(\.latestRun) + groups.flatMap(\.runs) + activeRuns
+        pinned.flatMap(\.runs) + groups.flatMap(\.runs) + activeRuns
     }
 
     public var isEmpty: Bool {
@@ -246,9 +246,13 @@ public struct GhClient: Sendable {
         rule: WatchRule,
         login: String?,
         runsPerRepo: Int,
-        pinnedRunsLimit: Int
+        pinnedRunsLimit: Int,
+        pinsIncludeAllActors: Bool = true
     ) async -> WorkflowSnapshot {
         let stampedActor = rule.onlyMyRuns ? login : nil
+        let includeEveryoneOnPins = pinsIncludeAllActors || !rule.onlyMyRuns
+        let pinUser = includeEveryoneOnPins ? nil : login
+        let pinLimit = pinsIncludeAllActors ? pinnedRunsLimit : 1
         var warnings: [String] = []
 
         async let repoTask = throttledMap(repositories, concurrency: Self.maxConcurrency) { repository in
@@ -263,10 +267,10 @@ public struct GhClient: Sendable {
         async let pinTask = throttledMap(pins, concurrency: Self.maxConcurrency) { pin in
             await self.fetchRuns(
                 repository: pin.repository,
-                user: nil,
+                user: pinUser,
                 workflow: pin.workflowName,
-                limit: pinnedRunsLimit,
-                actorStamp: nil
+                limit: pinLimit,
+                actorStamp: pinUser
             )
         }
 
@@ -283,15 +287,34 @@ public struct GhClient: Sendable {
             }
         }
 
+        var actorLoginsByRepo: [String: [String: String]] = [:]
+        if includeEveryoneOnPins {
+            var seenRepos: [Repository] = []
+            var seenIDs = Set<String>()
+            for pin in pins where seenIDs.insert(pin.repository.id).inserted {
+                seenRepos.append(pin.repository)
+            }
+            let actorMaps = await throttledMap(seenRepos, concurrency: Self.maxConcurrency) { repository in
+                await self.actorLogins(in: repository)
+            }
+            for (repository, map) in zip(seenRepos, actorMaps) {
+                actorLoginsByRepo[repository.id] = map
+            }
+        }
+
         var pinSnapshots: [PinSnapshot] = []
         for (pin, result) in zip(pins, pinResults) {
             switch result {
             case let .success(runs):
-                let latest = runs.sorted { $0.sortDate > $1.sortDate }.first
-                pinSnapshots.append(PinSnapshot(pin: pin, latestRun: latest))
+                let actors = actorLoginsByRepo[pin.repository.id] ?? [:]
+                let stamped = runs.map { run in
+                    run.withActor(actors[run.id])
+                }
+                let sorted = stamped.sorted { $0.sortDate > $1.sortDate }
+                pinSnapshots.append(PinSnapshot(pin: pin, runs: Array(sorted.prefix(max(pinLimit, 1)))))
             case let .failure(error):
                 warnings.append("\(pin.repository.fullName) · \(pin.workflowName): \(error.localizedDescription)")
-                pinSnapshots.append(PinSnapshot(pin: pin, latestRun: nil))
+                pinSnapshots.append(PinSnapshot(pin: pin, runs: []))
             }
         }
 
@@ -342,6 +365,27 @@ public struct GhClient: Sendable {
             return .failure(error)
         } catch {
             return .failure(.decoding(error.localizedDescription))
+        }
+    }
+
+    private func actorLogins(in repository: Repository) async -> [String: String] {
+        do {
+            let output = try await process.run([
+                "api",
+                "repos/\(repository.fullName)/actions/runs?per_page=100",
+            ])
+            if output.isEmpty || output == "{}" { return [:] }
+            let payload = try GitHubJSON.decoder().decode(GhWorkflowRunsPageDTO.self, from: Data(output.utf8))
+            var map: [String: String] = [:]
+            for run in payload.workflowRuns {
+                let login = run.actor?.login.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                if !login.isEmpty {
+                    map[String(run.id)] = login
+                }
+            }
+            return map
+        } catch {
+            return [:]
         }
     }
 }

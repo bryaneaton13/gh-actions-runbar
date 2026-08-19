@@ -146,12 +146,17 @@ struct SettingsView: View {
         } header: {
             Text("Filters")
         } footer: {
-            Text("Pinned workflows ignore these filters and always appear at the top of the panel.")
+            Text("Pinned workflows ignore event filters. Actor filtering follows Show everyone's runs under Pinned workflows.")
         }
     }
 
     private var pinsSection: some View {
         Section {
+            Toggle("Show everyone's runs", isOn: pinsIncludeAllActorsBinding)
+            Text("Pins use `gh run list -w` without `-u`, so you still see Deploy to prod when someone else triggers it.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             Button {
                 showPinEditor = true
             } label: {
@@ -249,6 +254,13 @@ struct SettingsView: View {
         )
     }
 
+    private var pinsIncludeAllActorsBinding: Binding<Bool> {
+        Binding(
+            get: { store.settings.pinsIncludeAllActors },
+            set: { store.setPinsIncludeAllActors($0) }
+        )
+    }
+
     private func eventBinding(_ event: WorkflowEvent) -> Binding<Bool> {
         Binding(
             get: { store.settings.watchRule.events.contains(event) },
@@ -325,7 +337,7 @@ struct PinEditorView: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
-                Text("Pins ignore actor and event filters. Use this for Deploy to prod and other always-on workflows.")
+                Text("Pins stay at the top. Turn on Show everyone's runs if you also want deploys other people triggered.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -194,6 +194,23 @@ public struct GhWorkflowDTO: Decodable, Sendable, Equatable, Identifiable {
     public var id: String { name }
 }
 
+public struct GhWorkflowRunsPageDTO: Decodable, Sendable, Equatable {
+    public let workflowRuns: [GhWorkflowRunActorDTO]
+
+    enum CodingKeys: String, CodingKey {
+        case workflowRuns = "workflow_runs"
+    }
+}
+
+public struct GhWorkflowRunActorDTO: Decodable, Sendable, Equatable {
+    public let id: Int
+    public let actor: GitHubUserDTO?
+}
+
+public struct GitHubUserDTO: Decodable, Sendable, Equatable {
+    public let login: String
+}
+
 public struct GitHubUser: Sendable, Equatable {
     public let login: String
 

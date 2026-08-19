@@ -12,7 +12,7 @@ macOS 14+ menu bar app for the Actions runs you care about. Pick repositories, f
 
 ## Why
 
-The bar shows a live running count and turns red after a watched failure, including pinned deploys that failed hours ago. Pins ignore actor and event filters, so Deploy to prod does not disappear behind someone else's CI. "Only my runs" plus `push` / `pull_request` / `workflow_dispatch` / `merge_group` keep the list on your work.
+The bar shows a live running count and turns red after a watched failure, including pinned deploys that failed hours ago. Pin Deploy to prod, then leave **Show everyone's runs** on so that job still appears when a teammate ships. Event filters stay off those rows. "Only my runs" plus `push` / `pull_request` / `workflow_dispatch` / `merge_group` keep the rest of the list on your work.
 
 ## Install
 

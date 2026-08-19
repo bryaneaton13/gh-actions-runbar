@@ -4,7 +4,7 @@ enum AppInfo {
     static let githubOwner = "bryaneaton13"
     static let githubRepo = "gh-actions-runbar"
 
-    static let fallbackVersion = "0.1.0"
+    static let fallbackVersion = "0.2.0"
 
     static var marketingVersion: String {
         let bundleVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String

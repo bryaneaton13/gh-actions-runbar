@@ -148,6 +148,26 @@ public struct WorkflowRun: Hashable, Identifiable, Sendable, Equatable {
         if !trimmed.isEmpty { return trimmed }
         return displayTitle?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? "Workflow"
     }
+
+    public func withActor(_ actor: String?) -> WorkflowRun {
+        let trimmed = actor?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return WorkflowRun(
+            id: id,
+            repository: repository,
+            workflowName: workflowName,
+            displayTitle: displayTitle,
+            branch: branch,
+            actor: trimmed?.isEmpty == false ? trimmed : self.actor,
+            event: event,
+            status: status,
+            conclusion: conclusion,
+            htmlURL: htmlURL,
+            headSHA: headSHA,
+            createdAt: createdAt,
+            startedAt: startedAt,
+            updatedAt: updatedAt
+        )
+    }
 }
 
 public struct RepositoryRunGroup: Identifiable, Hashable, Sendable, Equatable {
