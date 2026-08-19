@@ -310,7 +310,7 @@ private struct RepositorySection: View {
                     .truncationMode(.middle)
                 Spacer(minLength: 0)
                 Button {
-                    if let url = URL(string: "https://github.com/\(group.repository.fullName)/actions") {
+                    if let url = GitHubURL.actions(for: group.repository) {
                         NSWorkspace.shared.open(url)
                     }
                 } label: {

@@ -20,6 +20,6 @@ make icon      # regenerate Resources/AppIcon.icns
 - `scripts/build-app.sh` — release binary, Info.plist, ad-hoc sign
 - `version.env` — `MARKETING_VERSION` and `BUILD_NUMBER` used by the bundle
 
-Config while developing: `UserDefaults` key `runbar.settings` and `~/.config/runbar/config.json`.
+Config while developing: `UserDefaults` key `runbar.settings` and `~/.config/runbar/config.json` (directory `0700`, file `0600`).
 
-GitHub Pages lives in `docs/` (`index.html`, `site.css`). Visual rules for that page are in [`design.md`](../design.md). The panel screenshot is `docs/assets/screenshot.png`.
+GitHub Pages lives in `docs/` (`index.html`, `site.css`). Visual rules for that page are in [`design.md`](../design.md). The menu bar panel is [`ui.md`](ui.md). The panel screenshot is `docs/assets/screenshot.png`.

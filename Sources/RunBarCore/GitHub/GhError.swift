@@ -5,6 +5,8 @@ public enum GhError: LocalizedError, Sendable, Equatable {
     case unauthenticated(String)
     case failed(code: Int, message: String)
     case decoding(String)
+    case timedOut
+    case outputTooLarge
 
     public var errorDescription: String? {
         switch self {
@@ -16,6 +18,10 @@ public enum GhError: LocalizedError, Sendable, Equatable {
             return message.isEmpty ? "gh failed." : message
         case let .decoding(message):
             return "Could not read gh output: \(message)"
+        case .timedOut:
+            return "gh did not finish in time."
+        case .outputTooLarge:
+            return "gh returned more output than RunBar will read."
         }
     }
 }

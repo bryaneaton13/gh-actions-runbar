@@ -16,4 +16,4 @@ git tag v0.1.0
 git push origin main --tags
 ```
 
-Do not attach an unsigned `.app` zip to GitHub Releases as a download. Gatekeeper will block it. Install remains `make install` from source until there is a Developer ID for notarization.
+Do not attach an unsigned `.app` zip to GitHub Releases as a download. Gatekeeper will block it. Install remains `make install` from source until there is a Developer ID for notarization. `scripts/build-app.sh` ad-hoc signs the local app; do not swallow codesign failures.

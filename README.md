@@ -38,7 +38,7 @@ RunBar is built on your Mac. There is no notarized download yet, so Gatekeeper i
 
 ## Privacy
 
-RunBar reuses your existing `gh` session. It does not store a GitHub token or password. Settings live in `UserDefaults` and `~/.config/runbar/config.json`. See [Privacy](docs/privacy.md).
+RunBar reuses your existing `gh` session. It does not store a GitHub token or password. Settings live in `UserDefaults` and an owner-only file at `~/.config/runbar/config.json`. Click-through run links must be GitHub `https` URLs. See [Privacy](docs/privacy.md).
 
 ## Docs
 

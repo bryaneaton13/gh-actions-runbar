@@ -70,6 +70,6 @@ cat > "$APP/Contents/Info.plist" <<EOF
 EOF
 
 chmod +x "$MACOS/$APP_NAME"
-codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || true
+codesign --force --sign - "$APP"
 
 echo "Built $APP"

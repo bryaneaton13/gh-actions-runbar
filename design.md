@@ -1,5 +1,7 @@
 # RunBar site
 
+Marketing page only (GitHub Pages + README chrome). The menu bar panel is [`docs/ui.md`](docs/ui.md).
+
 The screenshot is the product. Chrome stays out of the way.
 
 The GitHub Pages site and README should read like a printed catalog page for a Mac utility: one large lockup, one photograph of the panel, install commands, then a few short facts. No gradients, no card shadows, no accent color used for mood. Color in the screenshot (running yellow, success green, fail red) is enough.

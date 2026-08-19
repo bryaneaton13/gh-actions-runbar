@@ -39,4 +39,4 @@ Until at least one repository or pin is added, the panel shows an empty state wi
 - Event toggles cover `push`, `pull_request`, `workflow_dispatch`, and `merge_group`.
 - **Pin a workflow** (for example Deploy to prod) to keep its latest run at the top. Pins ignore actor and event filters.
 
-Click a run to open it on GitHub.
+Click a run to open it on GitHub. RunBar only follows `https` links on `github.com`.

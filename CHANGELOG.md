@@ -9,6 +9,7 @@ All notable changes to RunBar are documented here.
 - First public release of the macOS menu bar app for GitHub Actions.
 - Watch selected repositories, filter to your runs, and pin workflows such as Deploy to prod.
 - Uses your existing GitHub CLI session. RunBar does not store a GitHub token.
+- `gh` calls time out after 30 seconds. Config is written owner-only (`0600`). Run links must be GitHub `https` URLs.
 
 ### Features
 

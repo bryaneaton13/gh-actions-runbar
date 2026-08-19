@@ -82,7 +82,7 @@ public struct GhRunDTO: Decodable, Sendable, Equatable {
     }
 
     public func workflowRun(repository: Repository, actor: String?) -> WorkflowRun? {
-        guard let htmlURL = URL(string: url) else { return nil }
+        guard let htmlURL = GitHubURL.parse(url) else { return nil }
         let workflowName = resolvedWorkflowName
         return WorkflowRun(
             id: String(databaseId),

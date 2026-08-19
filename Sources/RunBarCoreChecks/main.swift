@@ -32,6 +32,58 @@ enum RunBarCoreChecks {
             check(true, "invalid repo throws")
         }
 
+        let rejectedRepos = ["-evil/app", "acme/--help", "acme/app/extra", "acme/has space", "acme/"]
+        for raw in rejectedRepos {
+            do {
+                _ = try Repository.parse(raw)
+                check(false, "should reject \(raw)")
+            } catch {
+                check(true, "rejects \(raw)")
+            }
+        }
+        check(GitHubURL.isSafeToOpen(URL(string: "https://github.com/acme/app/actions/runs/1")!), "https github.com is safe")
+        check(GitHubURL.isSafeToOpen(URL(string: "https://gist.github.com/acme")!), "github.com subdomain is safe")
+        check(!GitHubURL.isSafeToOpen(URL(string: "file:///tmp/x")!), "file URL is unsafe")
+        check(!GitHubURL.isSafeToOpen(URL(string: "https://evil.example/acme")!), "non-github host is unsafe")
+        check(GitHubURL.parse("javascript:alert(1)") == nil, "javascript URL rejected")
+        check(GitHubURL.actions(for: Repository(owner: "acme", name: "app"))?.absoluteString == "https://github.com/acme/app/actions", "actions URL")
+        check(GitHubURL.actions(for: Repository(owner: "-evil", name: "app")) == nil, "invalid repo has no actions URL")
+
+        do {
+            let dirty = """
+            {"repositories":[{"owner":"acme","name":"app"},{"owner":"--flag","name":"x"}],"pins":[{"repository":{"owner":"--flag","name":"x"},"workflowName":"CI"},{"repository":{"owner":"acme","name":"app"},"workflowName":"Deploy"}]}
+            """
+            let decoded = try JSONDecoder().decode(AppSettings.self, from: Data(dirty.utf8))
+            equal(decoded.repositories.map(\.fullName), ["acme/app"], "drop invalid repos")
+            equal(decoded.pins.map(\.workflowName), ["Deploy"], "drop pins with invalid repos")
+        } catch {
+            check(false, "lossy settings decode: \(error)")
+        }
+
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let tempFile = tempDir.appendingPathComponent("config.json")
+        do {
+            try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+            try Data("{}".utf8).write(to: tempFile)
+            try ConfigPermissions.apply(directory: tempDir, file: tempFile)
+            let dirMode = try FileManager.default.attributesOfItem(atPath: tempDir.path)[.posixPermissions] as? NSNumber
+            let fileMode = try FileManager.default.attributesOfItem(atPath: tempFile.path)[.posixPermissions] as? NSNumber
+            equal(dirMode?.intValue, ConfigPermissions.directory, "config dir 0700")
+            equal(fileMode?.intValue, ConfigPermissions.file, "config file 0600")
+        } catch {
+            check(false, "config permissions: \(error)")
+        }
+        try? FileManager.default.removeItem(at: tempDir)
+
+        do {
+            _ = try await GhProcess(executablePath: "/bin/sleep", timeout: 0.3).run(["2"])
+            check(false, "hung process should time out")
+        } catch GhError.timedOut {
+            check(true, "gh process times out")
+        } catch {
+            check(false, "timeout should be timedOut, got \(error)")
+        }
+
         let now = Date(timeIntervalSince1970: 1_787_140_800)
         let repo = Repository(owner: "acme", name: "app")
 
@@ -197,6 +249,22 @@ enum RunBarCoreChecks {
             equal(running?.displayState, .running, "map in_progress")
             equal(payload[1].workflowRun(repository: repo, actor: nil)?.event, .workflowDispatch, "map dispatch")
             equal(payload[2].workflowRun(repository: repo, actor: "bryan")?.displayState, .failed, "map failure")
+            equal(payload[2].workflowRun(repository: repo, actor: "bryan")?.htmlURL.absoluteString, "https://github.com/acme/app/actions/runs/99", "keeps github https URL")
+            let unsafe = GhRunDTO(
+                databaseId: 1,
+                workflowName: "CI",
+                displayTitle: nil,
+                status: "completed",
+                conclusion: "success",
+                event: "push",
+                headBranch: "main",
+                headSha: "abc",
+                name: "CI",
+                startedAt: now,
+                updatedAt: now,
+                url: "file:///tmp/evil"
+            )
+            check(unsafe.workflowRun(repository: repo, actor: nil) == nil, "drop non-https run URL")
         } catch {
             check(false, "decode fixture: \(error)")
         }

@@ -12,7 +12,7 @@ struct RunRow: View {
 
     var body: some View {
         Button {
-            NSWorkspace.shared.open(run.htmlURL)
+            openRun()
         } label: {
             HStack(alignment: .center, spacing: 10) {
                 statusIcon
@@ -41,7 +41,7 @@ struct RunRow: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button("Open in GitHub") {
-                NSWorkspace.shared.open(run.htmlURL)
+                openRun()
             }
             Button("Copy run URL") {
                 NSPasteboard.general.clearContents()
@@ -49,6 +49,11 @@ struct RunRow: View {
             }
         }
         .help(run.displayTitle ?? run.name)
+    }
+
+    private func openRun() {
+        guard GitHubURL.isSafeToOpen(run.htmlURL) else { return }
+        NSWorkspace.shared.open(run.htmlURL)
     }
 
     private var subtitle: String {

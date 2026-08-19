@@ -25,6 +25,22 @@ public struct Repository: Codable, Hashable, Identifiable, Sendable, Comparable 
         "\(owner)/\(name)"
     }
 
+    public var isValid: Bool {
+        Self.isValidComponent(owner) && Self.isValidComponent(name)
+    }
+
+    public static func isValidComponent(_ value: String) -> Bool {
+        guard !value.isEmpty, !value.hasPrefix("-"), !value.contains("/") else {
+            return false
+        }
+        return value.unicodeScalars.allSatisfy { scalar in
+            CharacterSet.alphanumerics.contains(scalar)
+                || scalar == "."
+                || scalar == "_"
+                || scalar == "-"
+        }
+    }
+
     public static func parse(_ raw: String) throws -> Repository {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let parts = trimmed.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false)
@@ -32,7 +48,7 @@ public struct Repository: Codable, Hashable, Identifiable, Sendable, Comparable 
         guard parts.count == 2 else { throw RepositoryParseError.invalid }
         let owner = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
         let name = parts[1].trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !owner.isEmpty, !name.isEmpty, !owner.contains(" "), !name.contains(" ") else {
+        guard isValidComponent(owner), isValidComponent(name) else {
             throw RepositoryParseError.invalid
         }
         return Repository(owner: owner, name: name)
