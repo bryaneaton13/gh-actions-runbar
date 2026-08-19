@@ -22,7 +22,7 @@ brew install bryaneaton13/tap/runbar
 open "$(brew --prefix runbar)/RunBar.app"
 ```
 
-The formula links `~/Applications/RunBar.app` so Spotlight, Raycast, and launch at login (`SMAppService`) see it.
+Run `runbar` once. That opens the app and links `~/Applications/RunBar.app` so Spotlight, Raycast, and launch at login (`SMAppService`) see it.
 
 From a clone, `make install` copies `RunBar.app` into `~/Applications` directly.
 

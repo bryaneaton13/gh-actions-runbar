@@ -24,4 +24,4 @@ Config while developing: `UserDefaults` key `runbar.settings` and `~/.config/run
 
 GitHub Pages lives in `docs/` (`index.html`, `site.css`). Visual rules for that page are in [`design.md`](../design.md). The menu bar panel is [`ui.md`](ui.md). The panel screenshot is `docs/assets/screenshot.png`.
 
-The Homebrew formula lives in a separate tap, [bryaneaton13/homebrew-tap](https://github.com/bryaneaton13/homebrew-tap). It runs `make app`, installs `dist/RunBar.app` into the keg, then links `~/Applications/RunBar.app` so Launch Services can see it. Do not copy into `/Applications` from the formula (`prefix` is the Cellar).
+The Homebrew formula lives in a separate tap, [bryaneaton13/homebrew-tap](https://github.com/bryaneaton13/homebrew-tap). It runs `make app` and installs `dist/RunBar.app` into the keg. Homebrew’s install sandbox cannot write `~/Applications`, so the `runbar` wrapper (and the app on launch) creates that symlink. Do not copy into `/Applications` from the formula.
