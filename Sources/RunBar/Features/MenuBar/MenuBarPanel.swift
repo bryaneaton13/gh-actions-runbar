@@ -159,6 +159,11 @@ struct MenuBarPanel: View {
             .foregroundStyle(.secondary)
 
             HStack(spacing: 14) {
+                if store.updateState.isAvailable {
+                    FooterLink(title: "Update available", systemName: "arrow.down.circle") {
+                        openSettings()
+                    }
+                }
                 FooterLink(title: "Settings", systemName: "gearshape", action: openSettings)
                 FooterLink(title: "Website", systemName: "safari") {
                     NSWorkspace.shared.open(AppInfo.websiteURL)

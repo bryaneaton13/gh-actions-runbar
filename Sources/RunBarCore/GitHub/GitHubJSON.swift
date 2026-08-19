@@ -219,6 +219,26 @@ public struct GitHubUser: Sendable, Equatable {
     }
 }
 
+public struct GhReleaseDTO: Decodable, Sendable, Equatable {
+    public let tagName: String
+    public let url: String
+
+    public init(tagName: String, url: String) {
+        self.tagName = tagName
+        self.url = url
+    }
+
+    public func appRelease() throws -> AppRelease {
+        guard let version = AppVersion.parse(tagName) else {
+            throw GhError.decoding("Release tag is not MAJOR.MINOR.PATCH.")
+        }
+        guard let htmlURL = GitHubURL.parse(url) else {
+            throw GhError.decoding("Release URL is not a GitHub https link.")
+        }
+        return AppRelease(version: version, tagName: tagName, htmlURL: htmlURL)
+    }
+}
+
 private extension String {
     var nilIfEmpty: String? {
         isEmpty ? nil : self

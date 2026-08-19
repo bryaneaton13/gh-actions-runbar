@@ -25,7 +25,7 @@ brew install bryaneaton13/tap/runbar
 runbar
 ```
 
-That formula compiles RunBar on your Mac. Run `runbar` once to open it and link `~/Applications/RunBar.app` (Spotlight, Raycast, launch at login). There is no notarized download, so Gatekeeper is not in the way.
+That formula compiles RunBar on your Mac. Run `runbar` once to open it and link `~/Applications/RunBar.app` (Spotlight, Raycast, launch at login). There is no notarized download, so Gatekeeper is not in the way. Later: `brew upgrade bryaneaton13/tap/runbar`.
 
 Or clone and `make install`, which copies `RunBar.app` into `~/Applications` directly.
 

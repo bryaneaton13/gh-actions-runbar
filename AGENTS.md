@@ -39,6 +39,7 @@ Keep GitHub JSON, filtering, grouping, and `ActivitySummary` in RunBarCore. View
 - Pins use `gh run list -w`, ignore event filters, and sit at the top. `Show everyone's runs` (default on) skips `-u` and keeps up to `pinnedRunsLimit` recent runs per pin, including other actors. Off applies the actor filter like the rest of the list and keeps the latest run. `gh run list` has no actor field, so pin rows hydrate `actor.login` from `gh api repos/<owner>/<name>/actions/runs`. `RunFilter.merge` must drop every pin run ID from the filtered list.
 - Failure tint: a failed run in the last 30 minutes **or** a pin whose latest run failed, even if that run is hours old (`ActivitySummary`).
 - Polling: 15s when the panel is open or a run is active, 45s idle, skip while asleep (`PollingPolicy`).
+- Updates: check this repo’s GitHub Releases through `gh release view` at most once per 24 hours. Homebrew formula installs are not Sparkle — show `brew upgrade bryaneaton13/tap/runbar`. Do not attach an unsigned `.app` zip or add Sparkle until there is Developer ID notarization.
 - Accessory app: no Dock icon (`NSApp.setActivationPolicy(.accessory)`).
 - No telemetry, analytics, or extra TCC prompts (Screen Recording, Accessibility, Full Disk Access).
 

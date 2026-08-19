@@ -1,8 +1,8 @@
 # Releasing
 
-No notarized zip and no Homebrew cask. A release is a version bump, a changelog entry, a git tag, and a bump of the formula in [bryaneaton13/homebrew-tap](https://github.com/bryaneaton13/homebrew-tap).
+No notarized zip, no Sparkle, and no Homebrew cask. A release is a version bump, a changelog entry, a git tag, and a bump of the formula in [bryaneaton13/homebrew-tap](https://github.com/bryaneaton13/homebrew-tap).
 
-CI creates the tag. You still choose the version. Do not attach an unsigned `.app` zip; Gatekeeper will block it.
+CI creates the tag. You still choose the version. Do not attach an unsigned `.app` zip; Gatekeeper will block it. The in-app notice follows the GitHub tag; Homebrew users still need the tap `url` / `sha256` bump before `brew upgrade` installs that tag.
 
 ## Versioning
 

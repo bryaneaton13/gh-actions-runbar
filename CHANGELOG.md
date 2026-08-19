@@ -2,6 +2,13 @@
 
 All notable changes to RunBar are documented here.
 
+## 0.3.0 — 2026-08-19
+
+### Features
+
+- Settings → About checks GitHub Releases through `gh` and says when a newer version is out.
+- Homebrew installs copy `brew upgrade bryaneaton13/tap/runbar`. Other installs open GitHub Releases. The panel shows **Update available** only when a newer tag is known.
+
 ## 0.2.0 — 2026-08-19
 
 ### Features

@@ -217,6 +217,37 @@ struct SettingsView: View {
                     .font(.body.monospaced())
             }
 
+            updateStatusRow
+
+            Button {
+                Task { await store.checkForUpdate(force: true) }
+            } label: {
+                Label("Check for Updates", systemImage: "arrow.clockwise")
+            }
+            .disabled(store.updateState == .checking)
+
+            if case let .available(release) = store.updateState {
+                if store.installOrigin == .homebrewFormula {
+                    Button("Copy upgrade command") {
+                        store.copyUpgradeCommand()
+                    }
+                    Text(AppInfo.brewUpgradeCommand)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                    Text("If brew says you are current, the tap may not have caught up yet.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button("Open GitHub Releases") {
+                        store.openLatestRelease()
+                    }
+                    Text("\(release.version.description) is on GitHub.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             Button {
                 NSWorkspace.shared.open(AppInfo.websiteURL)
             } label: {
@@ -239,6 +270,33 @@ struct SettingsView: View {
                 NSWorkspace.shared.open(AppInfo.licenseURL)
             } label: {
                 Label("License (MIT)", systemImage: "doc.text")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatusRow: some View {
+        switch store.updateState {
+        case .idle:
+            EmptyView()
+        case .checking:
+            LabeledContent("Updates") {
+                ProgressView().controlSize(.small)
+            }
+        case .upToDate:
+            LabeledContent("Updates") {
+                Text("Up to date")
+                    .foregroundStyle(.secondary)
+            }
+        case let .available(release):
+            LabeledContent("Updates") {
+                Text("\(release.version.description) is out")
+                    .foregroundStyle(RunBarTheme.inProgress)
+            }
+        case .failed:
+            LabeledContent("Updates") {
+                Text("Could not check")
+                    .foregroundStyle(.secondary)
             }
         }
     }

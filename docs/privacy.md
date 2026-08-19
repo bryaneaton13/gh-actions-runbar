@@ -5,8 +5,8 @@ RunBar is a local menu bar app. It does not have its own GitHub account, OAuth a
 ## What RunBar uses
 
 - The **GitHub CLI** (`gh`) already installed and signed in on your Mac.
-- `gh` subprocesses such as `gh auth status`, `gh api user`, `gh run list`, `gh workflow list`, repo search, and `gh api repos/.../actions/runs` (actor logins for pinned runs). Each call has a 30-second timeout, a 1 MiB output cap, and is killed if it hangs.
-- Settings in `UserDefaults` and a mirror file at `~/.config/runbar/config.json` (repository list, filters, pins, launch-at-login). That file is not a credential store. RunBar writes the directory as `0700` and the file as `0600`.
+- `gh` subprocesses such as `gh auth status`, `gh api user`, `gh run list`, `gh workflow list`, repo search, `gh api repos/.../actions/runs` (actor logins for pinned runs), and `gh release view` of `bryaneaton13/gh-actions-runbar` (at most once per 24 hours, plus Check for Updates in Settings). Each call has a 30-second timeout, a 1 MiB output cap, and is killed if it hangs.
+- Settings in `UserDefaults` and a mirror file at `~/.config/runbar/config.json` (repository list, filters, pins, launch-at-login). Last update-check time lives only in `UserDefaults` (`runbar.update`). Those files are not a credential store. RunBar writes the config directory as `0700` and the file as `0600`.
 
 ## What RunBar does not do
 
@@ -14,7 +14,7 @@ RunBar is a local menu bar app. It does not have its own GitHub account, OAuth a
 - It does **not** crawl your disk. It only reads its own config file and talks to `gh`.
 - It does **not** send usage analytics.
 - It does **not** request Screen Recording, Accessibility, Full Disk Access, or Keychain items of its own.
-- It does **not** open run links unless they are `https` URLs on `github.com` (or a `*.github.com` host).
+- It does **not** open GitHub links unless they are `https` URLs on `github.com` (or a `*.github.com` host). That includes run URLs and the latest-release page.
 
 `gh` itself may use the Keychain for its tokens. That is GitHub CLI behavior, not RunBar.
 

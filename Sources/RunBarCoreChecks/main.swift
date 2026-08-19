@@ -426,6 +426,129 @@ enum RunBarCoreChecks {
             "search scopes to owner"
         )
 
+        equal(AppVersion.parse("0.3.0"), AppVersion(major: 0, minor: 3, patch: 0), "parse version")
+        equal(AppVersion.parse("v0.3.0"), AppVersion(major: 0, minor: 3, patch: 0), "parse v-prefix")
+        check(AppVersion.parse("1.2") == nil, "reject two-part version")
+        check(AppVersion.parse("1.2.3-beta") == nil, "reject prerelease tag")
+        check(AppVersion.parse("v0.3.0")! > AppVersion.parse("0.2.0")!, "minor bump is newer")
+        check(AppVersion.parse("1.0.0")! > AppVersion.parse("0.9.9")!, "major bump is newer")
+        check(!(AppVersion.parse("0.2.0")! > AppVersion.parse("0.2.0")!), "same version is not newer")
+        check(UpdateCheckPolicy.isNewer(latest: AppVersion(major: 0, minor: 3, patch: 0), than: AppVersion(major: 0, minor: 2, patch: 0)), "policy newer")
+        check(!UpdateCheckPolicy.isNewer(latest: AppVersion(major: 0, minor: 2, patch: 0), than: AppVersion(major: 0, minor: 2, patch: 0)), "policy equal")
+        check(!UpdateCheckPolicy.isNewer(latest: AppVersion(major: 0, minor: 2, patch: 0), than: AppVersion(major: 0, minor: 3, patch: 0)), "policy current ahead")
+
+        let checkNow = Date(timeIntervalSince1970: 1_787_140_800)
+        check(
+            UpdateCheckPolicy.shouldCheck(lastCheckAt: nil, now: checkNow, isSleeping: false),
+            "first check is due"
+        )
+        check(
+            !UpdateCheckPolicy.shouldCheck(lastCheckAt: nil, now: checkNow, isSleeping: true),
+            "sleep skips update check"
+        )
+        check(
+            !UpdateCheckPolicy.shouldCheck(lastCheckAt: checkNow, now: checkNow, isSleeping: false),
+            "just-checked is not due"
+        )
+        check(
+            UpdateCheckPolicy.shouldCheck(
+                lastCheckAt: checkNow.addingTimeInterval(-25 * 60 * 60),
+                now: checkNow,
+                isSleeping: false
+            ),
+            "24h interval elapsed"
+        )
+
+        equal(
+            InstallOrigin.from(bundlePath: "/opt/homebrew/Cellar/runbar/0.2.0/RunBar.app"),
+            .homebrewFormula,
+            "Cellar is Homebrew"
+        )
+        equal(
+            InstallOrigin.from(bundlePath: "/opt/runbar/0.2.0/RunBar.app"),
+            .homebrewFormula,
+            "opt prefix is Homebrew"
+        )
+        equal(
+            InstallOrigin.from(bundlePath: "/Users/bryan/Applications/RunBar.app"),
+            .other,
+            "Applications is not Homebrew"
+        )
+
+        check(
+            GitHubURL.releases(for: Repository(owner: "bryaneaton13", name: "gh-actions-runbar"))?.absoluteString
+                == "https://github.com/bryaneaton13/gh-actions-runbar/releases",
+            "releases URL"
+        )
+        check(GitHubURL.releases(for: Repository(owner: "-evil", name: "app")) == nil, "invalid repo has no releases URL")
+
+        do {
+            let release = try GhReleaseDTO(
+                tagName: "v0.3.0",
+                url: "https://github.com/bryaneaton13/gh-actions-runbar/releases/tag/v0.3.0"
+            ).appRelease()
+            equal(release.version, AppVersion(major: 0, minor: 3, patch: 0), "release version")
+            equal(
+                release.htmlURL.absoluteString,
+                "https://github.com/bryaneaton13/gh-actions-runbar/releases/tag/v0.3.0",
+                "release URL"
+            )
+        } catch {
+            check(false, "valid release DTO: \(error)")
+        }
+        do {
+            _ = try GhReleaseDTO(tagName: "v0.3.0", url: "file:///tmp/evil").appRelease()
+            check(false, "unsafe release URL should throw")
+        } catch GhError.decoding {
+            check(true, "drop non-https release URL")
+        } catch {
+            check(false, "unsafe URL should be decoding, got \(error)")
+        }
+        do {
+            _ = try GhReleaseDTO(tagName: "nightly", url: "https://github.com/acme/app/releases/tag/nightly").appRelease()
+            check(false, "non-semver tag should throw")
+        } catch GhError.decoding {
+            check(true, "drop non-semver release tag")
+        } catch {
+            check(false, "non-semver should be decoding, got \(error)")
+        }
+
+        let cached = UpdateCheckRecord(
+            lastCheckAt: checkNow,
+            latestTag: "v0.3.0",
+            latestURLString: "https://github.com/bryaneaton13/gh-actions-runbar/releases/tag/v0.3.0"
+        )
+        equal(cached.latestRelease?.version, AppVersion(major: 0, minor: 3, patch: 0), "cache restores release")
+        let badCache = UpdateCheckRecord(lastCheckAt: checkNow, latestTag: "v0.3.0", latestURLString: "file:///tmp/x")
+        check(badCache.latestRelease == nil, "cache drops unsafe URL")
+
+        let releaseProcess = FakeGhProcess()
+        let releaseClient = GhClient(process: releaseProcess)
+        do {
+            let appRepo = try Repository.parse("bryaneaton13/gh-actions-runbar")
+            let fetchedRelease = try await releaseClient.latestRelease(in: appRepo)
+            equal(fetchedRelease.version, AppVersion(major: 0, minor: 3, patch: 0), "client latest release")
+            let releaseCommands = await releaseProcess.commands
+            check(
+                releaseCommands.contains { command in
+                    command == ["release", "view", "--repo", "bryaneaton13/gh-actions-runbar", "--json", "tagName,url"]
+                },
+                "release view argv"
+            )
+            do {
+                _ = try await releaseClient.latestRelease(in: Repository(owner: "-evil", name: "app"))
+                check(false, "invalid repo should not call gh")
+            } catch GhError.failed {
+                check(true, "invalid repo fails before gh")
+            } catch {
+                check(false, "invalid repo should be failed, got \(error)")
+            }
+            let afterInvalid = await releaseProcess.commands
+            equal(afterInvalid.count, releaseCommands.count, "invalid repo does not spawn gh")
+        } catch {
+            check(false, "latest release client: \(error)")
+        }
+
         if failures == 0 {
             print("RunBarCoreChecks: all passed")
         } else {
@@ -468,6 +591,9 @@ private actor FakeGhProcess: GhRunning {
         }
         if arguments.starts(with: ["search", "repos"]) {
             return searchRepoJSON
+        }
+        if arguments.starts(with: ["release", "view"]) {
+            return releaseJSON
         }
         throw GhError.failed(code: 1, message: "unexpected \(arguments.joined(separator: " "))")
     }
@@ -519,6 +645,10 @@ private let actionsRunsJSON = """
     }
   ]
 }
+"""
+
+private let releaseJSON = """
+{"tagName":"v0.3.0","url":"https://github.com/bryaneaton13/gh-actions-runbar/releases/tag/v0.3.0"}
 """
 
 private let searchRepoJSON = """

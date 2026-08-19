@@ -148,6 +148,9 @@ Three group types, in this order, omitted when empty:
 | Refresh | ⌘R |
 | Settings… | ⌘, |
 | Quit | ⌘Q |
+| Update available | — |
+
+**Update available** is omitted unless Settings already knows a newer GitHub release exists. It opens Settings. Do not add Website or GitHub here.
 
 No Website. No GitHub. Those belong on the marketing page and in Settings → About. A command band that looks like a browser toolbar is why the current screenshot reads as a window.
 
@@ -157,7 +160,7 @@ While Refresh is in flight, the row label stays “Refresh” and a small `Progr
 
 Grouped `Form` in a window, not in the popover. Minimum ~540×520. Opened only from Settings….
 
-Sections, in order: Account, Repositories, Filters, Pins, General, About. Pins include **Show everyone's runs**. About holds version, website, and source links.
+Sections, in order: Account, Repositories, Filters, Pins, General, About. Pins include **Show everyone's runs**. About holds version, update status (**Check for Updates**, Homebrew copy `brew upgrade` or Open GitHub Releases), website, and source links.
 
 ## Motion
 

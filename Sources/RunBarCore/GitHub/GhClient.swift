@@ -225,6 +225,25 @@ public struct GhClient: Sendable {
         }
     }
 
+    public func latestRelease(in repository: Repository) async throws -> AppRelease {
+        guard repository.isValid else {
+            throw GhError.failed(code: 1, message: "Invalid repository.")
+        }
+        let output = try await process.run([
+            "release", "view",
+            "--repo", repository.fullName,
+            "--json", "tagName,url",
+        ])
+        do {
+            let payload = try GitHubJSON.decoder().decode(GhReleaseDTO.self, from: Data(output.utf8))
+            return try payload.appRelease()
+        } catch let error as GhError {
+            throw error
+        } catch {
+            throw GhError.decoding(error.localizedDescription)
+        }
+    }
+
     public func listWorkflows(in repository: Repository) async throws -> [GhWorkflowDTO] {
         let output = try await process.run([
             "workflow", "list",

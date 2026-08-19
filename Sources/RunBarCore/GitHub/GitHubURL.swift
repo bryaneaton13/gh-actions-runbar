@@ -16,4 +16,9 @@ public enum GitHubURL {
         guard repository.isValid else { return nil }
         return parse("https://github.com/\(repository.fullName)/actions")
     }
+
+    public static func releases(for repository: Repository) -> URL? {
+        guard repository.isValid else { return nil }
+        return parse("https://github.com/\(repository.fullName)/releases")
+    }
 }

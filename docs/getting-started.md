@@ -43,3 +43,13 @@ Until at least one repository or pin is added, the panel shows an empty state wi
 - **Show everyone's runs** (under Pinned workflows, on by default) skips `-u` on those pins so you still see the job when someone else triggers it. Turn it off if you only want your own pin runs.
 
 Click a run to open it on GitHub. RunBar only follows `https` links on `github.com`.
+
+## 5. Updates
+
+Settings → About checks GitHub Releases through `gh`. Homebrew installs copy:
+
+```bash
+brew upgrade bryaneaton13/tap/runbar
+```
+
+If brew says you are current, the tap may not have caught up yet. From a clone, pull and `make install`. There is no Sparkle auto-updater and no notarized zip.

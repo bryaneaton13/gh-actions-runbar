@@ -1,13 +1,14 @@
 import Foundation
+import RunBarCore
 
 enum HomebrewAppLink {
     static func ensureApplicationsSymlink(
         bundleURL: URL = Bundle.main.bundleURL,
         fileManager: FileManager = .default
     ) {
-        let path = bundleURL.path
-        let fromHomebrew = path.contains("/Cellar/runbar/") || path.contains("/opt/runbar/")
-        guard fromHomebrew, bundleURL.pathExtension == "app" else { return }
+        guard InstallOrigin.from(bundlePath: bundleURL.path) == .homebrewFormula,
+              bundleURL.pathExtension == "app"
+        else { return }
 
         let apps = fileManager.homeDirectoryForCurrentUser
             .appendingPathComponent("Applications", isDirectory: true)
