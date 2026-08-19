@@ -84,6 +84,48 @@ enum RunBarCoreChecks {
         equal(failureSummary.symbolName, "exclamationmark.circle.fill", "failure icon")
         check(failureSummary.usesFailureTint, "failure tint")
 
+        let stalePinnedFailure = PinSnapshot(
+            pin: PinnedWorkflow(repository: repo, workflowName: "Deploy to prod"),
+            latestRun: run(
+                id: "200",
+                conclusion: .failure,
+                name: "Deploy to prod",
+                updatedAt: now.addingTimeInterval(-4 * 3600)
+            )
+        )
+        let pinnedFailureSummary = ActivitySummary(
+            runs: [stalePinnedFailure.latestRun!],
+            pins: [stalePinnedFailure],
+            referenceDate: now
+        )
+        equal(pinnedFailureSummary.pinnedFailureCount, 1, "stale pinned failure still counts")
+        check(pinnedFailureSummary.usesFailureTint, "pinned failure tints menu bar")
+        equal(pinnedFailureSummary.statusBarCount, Optional(1), "pinned failure badge")
+        check(pinnedFailureSummary.statusBarCountUsesFailureTint, "badge uses failure tint")
+        equal(pinnedFailureSummary.headline, "1 pinned failure", "pinned failure headline")
+        equal(pinnedFailureSummary.symbolName, "exclamationmark.circle.fill", "pinned failure icon")
+
+        let mixedPinnedSummary = ActivitySummary(
+            runs: [
+                run(id: "1", status: .inProgress, conclusion: nil),
+                stalePinnedFailure.latestRun!,
+            ],
+            pins: [stalePinnedFailure],
+            referenceDate: now
+        )
+        equal(mixedPinnedSummary.statusBarCount, Optional(1), "running count still shown")
+        check(mixedPinnedSummary.usesFailureTint, "pinned failure still tints while running")
+        check(!mixedPinnedSummary.statusBarCountUsesFailureTint, "running count stays primary")
+
+        let recoveredPin = PinSnapshot(
+            pin: PinnedWorkflow(repository: repo, workflowName: "Deploy to prod"),
+            latestRun: run(id: "201", conclusion: .success, name: "Deploy to prod")
+        )
+        let recoveredSummary = ActivitySummary(runs: [recoveredPin.latestRun!], pins: [recoveredPin], referenceDate: now)
+        equal(recoveredSummary.pinnedFailureCount, 0, "successful pin is not a failure")
+        check(!recoveredSummary.usesFailureTint, "successful pin does not tint")
+        equal(recoveredSummary.statusBarCount, Optional<Int>.none, "no badge when pin is healthy")
+
         let idleSummary = ActivitySummary(runs: [], referenceDate: now)
         equal(idleSummary.symbolName, "bolt.circle", "idle icon")
 

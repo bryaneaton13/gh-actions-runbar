@@ -24,4 +24,8 @@ public struct PinSnapshot: Equatable, Sendable, Identifiable {
     }
 
     public var id: String { pin.id }
+
+    public var hasFailedLatestRun: Bool {
+        latestRun?.displayState == .failed
+    }
 }

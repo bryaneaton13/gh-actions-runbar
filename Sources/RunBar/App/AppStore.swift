@@ -229,7 +229,7 @@ final class AppStore {
             pinnedRunsLimit: settings.pinnedRunsLimit
         )
         snapshot = fetched
-        summary = ActivitySummary(runs: uniqueRuns(from: fetched))
+        summary = ActivitySummary(runs: uniqueRuns(from: fetched), pins: fetched.pinned)
         lastRefresh = fetched.fetchedAt
         if !fetched.warnings.isEmpty {
             errorMessage = fetched.warnings.prefix(2).joined(separator: " · ")

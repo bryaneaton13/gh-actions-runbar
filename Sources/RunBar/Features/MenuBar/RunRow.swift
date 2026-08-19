@@ -112,6 +112,12 @@ struct PinRow: View {
     var body: some View {
         if let run = snapshot.latestRun {
             RunRow(run: run, referenceDate: referenceDate, repositoryLabel: snapshot.pin.repository.fullName)
+                .overlay {
+                    if snapshot.hasFailedLatestRun {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(RunBarTheme.failure.opacity(0.55), lineWidth: 1)
+                    }
+                }
         } else {
             HStack(spacing: 10) {
                 Image(systemName: "pin.fill")

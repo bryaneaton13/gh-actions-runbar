@@ -107,7 +107,11 @@ struct MenuBarPanel: View {
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 16) {
                             if !store.snapshot.pinned.isEmpty {
-                                PinnedSection(pins: store.snapshot.pinned, referenceDate: context.date)
+                                PinnedSection(
+                                    pins: store.snapshot.pinned,
+                                    failureCount: store.summary.pinnedFailureCount,
+                                    referenceDate: context.date
+                                )
                             }
 
                             if !store.snapshot.activeRuns.isEmpty {
@@ -255,11 +259,18 @@ private struct FooterLink: View {
 
 private struct PinnedSection: View {
     let pins: [PinSnapshot]
+    var failureCount: Int = 0
     let referenceDate: Date
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(title: "Pinned", systemName: "pin.fill", count: pins.count)
+            SectionLabel(
+                title: "Pinned",
+                systemName: failureCount > 0 ? "exclamationmark.circle.fill" : "pin.fill",
+                count: pins.count,
+                tinted: failureCount > 0,
+                tint: failureCount > 0 ? RunBarTheme.failure : nil
+            )
             VStack(spacing: 8) {
                 ForEach(pins) { pin in
                     PinRow(snapshot: pin, referenceDate: referenceDate)
@@ -275,7 +286,7 @@ private struct ActiveSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(title: "Active", systemName: "bolt.fill", count: runs.count, tinted: true)
+            SectionLabel(title: "Active", systemName: "bolt.fill", count: runs.count, tinted: true, tint: RunBarTheme.inProgress)
             VStack(spacing: 8) {
                 ForEach(runs) { run in
                     RunRow(run: run, referenceDate: referenceDate, repositoryLabel: run.repository.fullName)
@@ -324,12 +335,17 @@ private struct SectionLabel: View {
     let systemName: String
     var count: Int = 0
     var tinted: Bool = false
+    var tint: Color? = nil
+
+    private var accent: Color {
+        tint ?? (tinted ? RunBarTheme.inProgress : Color.secondary)
+    }
 
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: systemName)
                 .font(.caption)
-                .foregroundStyle(tinted ? RunBarTheme.inProgress : Color.secondary)
+                .foregroundStyle(accent)
             Text(title)
                 .font(.subheadline.weight(.semibold))
             if count > 0 {
@@ -337,8 +353,8 @@ private struct SectionLabel: View {
                     .font(.caption.weight(.semibold))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
-                    .background(Capsule().fill((tinted ? RunBarTheme.inProgress : Color.secondary).opacity(0.18)))
-                    .foregroundStyle(tinted ? RunBarTheme.inProgress : Color.secondary)
+                    .background(Capsule().fill(accent.opacity(0.18)))
+                    .foregroundStyle(accent)
             }
             Spacer(minLength: 0)
         }
