@@ -2,6 +2,8 @@
 
 RunBar is a macOS 14+ menu bar app. It talks to GitHub through the [GitHub CLI](https://cli.github.com/) (`gh`) you already have signed in.
 
+![RunBar panel with a pinned deploy, two running jobs, and recent Actions](assets/screenshot.png)
+
 ## 1. Install `gh` and sign in
 
 ```bash

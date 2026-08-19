@@ -1,20 +1,18 @@
 # RunBar
 
-**GitHub Actions, in your menu bar.**
+GitHub Actions, in your menu bar.
 
-[![macOS 14+](https://img.shields.io/badge/macOS-14%2B-1c2028?style=flat-square)](https://github.com/bryaneaton13/gh-actions-runbar#install)
-[![License: MIT](https://img.shields.io/badge/license-MIT-3fb950?style=flat-square)](LICENSE)
-[![Site](https://img.shields.io/badge/site-bryaneaton13.github.io-d29922?style=flat-square)](https://bryaneaton13.github.io/gh-actions-runbar/)
+[![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111111?style=flat-square)](https://github.com/bryaneaton13/gh-actions-runbar#install)
+[![License: MIT](https://img.shields.io/badge/license-MIT-707072?style=flat-square)](LICENSE)
+[![Site](https://img.shields.io/badge/site-bryaneaton13.github.io-111111?style=flat-square)](https://bryaneaton13.github.io/gh-actions-runbar/)
 
-Tiny macOS 14+ menu bar app that watches the Actions runs you care about. Pick repositories, filter to your commits / PRs / manual runs, and pin workflows like Deploy to prod so they stay at the top. No Dock icon. Uses the GitHub CLI you already signed in.
+macOS 14+ menu bar app for the Actions runs you care about. Pick repositories, filter to your commits / PRs / manual runs, and pin workflows like Deploy to prod so they stay at the top. No Dock icon. Uses the GitHub CLI you already signed in.
 
-![RunBar menu panel](docs/assets/screenshot.svg)
+![RunBar menu panel showing a pinned Hummingbird Prod Deploy, two running jobs, and recent Actions](docs/assets/screenshot.png)
 
 ## Why
 
-- **See runs without opening GitHub.** The bar shows a live running count and turns red after a watched failure, including pinned deploys that failed hours ago.
-- **Keep production in view.** Pins ignore actor and event filters so Deploy to prod does not disappear behind someone else’s CI.
-- **Stay on your own work.** “Only my runs” plus `push` / `pull_request` / `workflow_dispatch` / `merge_group` filters.
+The bar shows a live running count and turns red after a watched failure, including pinned deploys that failed hours ago. Pins ignore actor and event filters, so Deploy to prod does not disappear behind someone else's CI. "Only my runs" plus `push` / `pull_request` / `workflow_dispatch` / `merge_group` keep the list on your work.
 
 ## Install
 

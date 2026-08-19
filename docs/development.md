@@ -21,3 +21,5 @@ make icon      # regenerate Resources/AppIcon.icns
 - `version.env` — `MARKETING_VERSION` and `BUILD_NUMBER` used by the bundle
 
 Config while developing: `UserDefaults` key `runbar.settings` and `~/.config/runbar/config.json`.
+
+GitHub Pages lives in `docs/` (`index.html`, `site.css`). Visual rules for that page are in [`design.md`](../design.md). The panel screenshot is `docs/assets/screenshot.png`.
