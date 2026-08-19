@@ -1,0 +1,58 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Swift Package Manager
+.build/
+Packages/
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+.netrc
+
+# Xcode
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.hmap
+
+# Local app bundles (make app / make install)
+dist/
+*.app
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Signing and secrets
+*.pem
+*.p12
+*.cer
+*.certSigningRequest
+*.mobileprovision
+.env
+.env.*
+!.env.example
+credentials.json
+secrets.json
+
+# Local RunBar config if it ever lands in the repo
+/config.json
+.runbar/
+
+# Editor / agent scratch
+.idea/
+.vscode/
+.cursor/
+*.swp
+*~
+tmp/
+
+# Coverage / profiling
+*.profraw
+*.profdata
+coverage/
