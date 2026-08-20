@@ -265,13 +265,11 @@ public struct GhClient: Sendable {
         rule: WatchRule,
         login: String?,
         runsPerRepo: Int,
-        pinnedRunsLimit: Int,
         pinsIncludeAllActors: Bool = true
     ) async -> WorkflowSnapshot {
         let stampedActor = rule.onlyMyRuns ? login : nil
         let includeEveryoneOnPins = pinsIncludeAllActors || !rule.onlyMyRuns
         let pinUser = includeEveryoneOnPins ? nil : login
-        let pinLimit = pinsIncludeAllActors ? pinnedRunsLimit : 1
         var warnings: [String] = []
 
         async let repoTask = throttledMap(repositories, concurrency: Self.maxConcurrency) { repository in
@@ -288,7 +286,7 @@ public struct GhClient: Sendable {
                 repository: pin.repository,
                 user: pinUser,
                 workflow: pin.workflowName,
-                limit: pinLimit,
+                limit: 1,
                 actorStamp: pinUser
             )
         }
@@ -329,8 +327,8 @@ public struct GhClient: Sendable {
                 let stamped = runs.map { run in
                     run.withActor(actors[run.id])
                 }
-                let sorted = stamped.sorted { $0.sortDate > $1.sortDate }
-                pinSnapshots.append(PinSnapshot(pin: pin, runs: Array(sorted.prefix(max(pinLimit, 1)))))
+                let latest = stamped.max { $0.sortDate < $1.sortDate }
+                pinSnapshots.append(PinSnapshot(pin: pin, latestRun: latest))
             case let .failure(error):
                 warnings.append("\(pin.repository.fullName) · \(pin.workflowName): \(error.localizedDescription)")
                 pinSnapshots.append(PinSnapshot(pin: pin, runs: []))

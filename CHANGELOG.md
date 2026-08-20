@@ -2,6 +2,12 @@
 
 All notable changes to RunBar are documented here.
 
+## 0.4.0 — 2026-08-20
+
+### Fixes
+
+- Pinned workflows show one latest run each. **Show everyone's runs** still skips `-u` so a teammate's Deploy to prod stays on that row.
+
 ## 0.3.0 — 2026-08-19
 
 ### Features

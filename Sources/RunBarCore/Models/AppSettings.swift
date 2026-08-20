@@ -6,7 +6,6 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var pins: [PinnedWorkflow]
     public var pinsIncludeAllActors: Bool
     public var runsPerRepo: Int
-    public var pinnedRunsLimit: Int
     public var launchAtLogin: Bool
 
     public init(
@@ -15,7 +14,6 @@ public struct AppSettings: Codable, Equatable, Sendable {
         pins: [PinnedWorkflow] = [],
         pinsIncludeAllActors: Bool = true,
         runsPerRepo: Int = 8,
-        pinnedRunsLimit: Int = 3,
         launchAtLogin: Bool = false
     ) {
         self.repositories = repositories
@@ -23,7 +21,6 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.pins = pins
         self.pinsIncludeAllActors = pinsIncludeAllActors
         self.runsPerRepo = runsPerRepo
-        self.pinnedRunsLimit = pinnedRunsLimit
         self.launchAtLogin = launchAtLogin
     }
 
@@ -35,7 +32,6 @@ public struct AppSettings: Codable, Equatable, Sendable {
         case pins
         case pinsIncludeAllActors
         case runsPerRepo
-        case pinnedRunsLimit
         case launchAtLogin
     }
 
@@ -52,7 +48,6 @@ public struct AppSettings: Codable, Equatable, Sendable {
             pins: validPins,
             pinsIncludeAllActors: pinsIncludeAllActors,
             runsPerRepo: max(runsPerRepo, 1),
-            pinnedRunsLimit: max(pinnedRunsLimit, 1),
             launchAtLogin: launchAtLogin
         )
     }
@@ -66,7 +61,6 @@ public struct AppSettings: Codable, Equatable, Sendable {
         pins = loosePins.compactMap(\.pin)
         pinsIncludeAllActors = try container.decodeIfPresent(Bool.self, forKey: .pinsIncludeAllActors) ?? true
         runsPerRepo = try container.decodeIfPresent(Int.self, forKey: .runsPerRepo) ?? 8
-        pinnedRunsLimit = try container.decodeIfPresent(Int.self, forKey: .pinnedRunsLimit) ?? 3
         launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         self = sanitized()
     }

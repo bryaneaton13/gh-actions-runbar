@@ -6,7 +6,7 @@ enum AppInfo {
     static let githubRepo = "gh-actions-runbar"
     static let brewUpgradeCommand = "brew upgrade bryaneaton13/tap/runbar"
 
-    static let fallbackVersion = "0.3.0"
+    static let fallbackVersion = "0.4.0"
 
     static var marketingVersion: String {
         let bundleVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String

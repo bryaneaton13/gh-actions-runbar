@@ -279,13 +279,7 @@ private struct PinnedSection: View {
             )
             VStack(spacing: 8) {
                 ForEach(pins) { pin in
-                    if pin.runs.isEmpty {
-                        PinRow(snapshot: pin, referenceDate: referenceDate)
-                    } else {
-                        ForEach(pin.runs) { run in
-                            PinRow(snapshot: PinSnapshot(pin: pin.pin, latestRun: run), referenceDate: referenceDate)
-                        }
-                    }
+                    PinRow(snapshot: pin, referenceDate: referenceDate)
                 }
             }
         }

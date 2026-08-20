@@ -290,7 +290,6 @@ final class AppStore {
             rule: settings.watchRule,
             login: login,
             runsPerRepo: settings.runsPerRepo,
-            pinnedRunsLimit: settings.pinnedRunsLimit,
             pinsIncludeAllActors: settings.pinsIncludeAllActors
         )
         snapshot = fetched

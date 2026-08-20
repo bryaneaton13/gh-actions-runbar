@@ -286,20 +286,19 @@ enum RunBarCoreChecks {
             rule: WatchRule(onlyMyRuns: true, events: [.pullRequest, .push, .workflowDispatch]),
             login: "bryan",
             runsPerRepo: 8,
-            pinnedRunsLimit: 3,
             pinsIncludeAllActors: true
         )
         let commands = await process.commands
         equal(snapshot.pinned.first?.latestRun?.workflowName, "Deploy to prod", "pin latest")
-        equal(snapshot.pinned.first?.runs.count, 2, "pin keeps everyone's recent runs")
+        equal(snapshot.pinned.first?.runs.count, 1, "pin keeps only the latest run")
+        equal(snapshot.pinned.first?.latestRun?.id, "102", "pin prefers the newest run")
         equal(snapshot.pinned.first?.latestRun?.actor, "sam", "pin hydrates actor from gh api")
-        equal(snapshot.pinned.first?.runs.map(\.actor), ["sam", "bryan"], "pin rows show who triggered each run")
         equal(snapshot.activeRuns.map(\.id), ["101"], "active CI")
-        equal(snapshot.groups.flatMap(\.runs).map(\.id), ["99"], "completed leftover")
+        equal(snapshot.groups.flatMap(\.runs).map(\.id), ["100", "99"], "completed leftover")
         check(commands.contains { $0.contains("-u") && $0.contains("bryan") && !$0.contains("-w") }, "repo list uses -u")
         check(
-            commands.contains { $0.contains("-w") && $0.contains("Deploy to prod") && !$0.contains("-u") },
-            "pin skips -u when including everyone"
+            commands.contains { $0.contains("-w") && $0.contains("Deploy to prod") && !$0.contains("-u") && $0.contains("1") },
+            "pin skips -u and fetches one run when including everyone"
         )
         check(
             commands.contains { command in
@@ -316,7 +315,6 @@ enum RunBarCoreChecks {
             rule: WatchRule(onlyMyRuns: true, events: [.pullRequest, .push, .workflowDispatch]),
             login: "bryan",
             runsPerRepo: 8,
-            pinnedRunsLimit: 3,
             pinsIncludeAllActors: false
         )
         let mineOnlyCommands = await mineOnlyProcess.commands
