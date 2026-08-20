@@ -193,6 +193,92 @@ enum RunBarCoreChecks {
         equal(RelativeTime.description(of: now.addingTimeInterval(-6 * 24 * 3600), relativeTo: now), "6 days ago", "six days is not a week")
         equal(RelativeTime.description(of: now.addingTimeInterval(-3 * 24 * 3600), relativeTo: now), "3 days ago", "three days")
         equal(RelativeTime.description(of: now.addingTimeInterval(-7 * 24 * 3600), relativeTo: now), "1 week ago", "seven days is a week")
+        equal(RelativeTime.compact(12), "12s", "compact seconds")
+        equal(RelativeTime.compact(15 * 60), "15m", "compact minutes")
+        equal(RelativeTime.compact(3600), "1h", "compact hour")
+        equal(RelativeTime.compact(3660), "1h 1m", "compact hour and minute")
+        equal(RelativeTime.compact(-5), "0s", "compact clamps negative")
+
+        let runningClock = run(
+            id: "running-clock",
+            status: .inProgress,
+            conclusion: nil,
+            startedAt: now.addingTimeInterval(-15 * 60),
+            updatedAt: now
+        )
+        equal(RelativeTime.timestamp(for: runningClock, referenceDate: now), "15m", "running elapsed")
+        equal(
+            RelativeTime.timestamp(for: runningClock, typicalDuration: 8 * 60, referenceDate: now),
+            "15m · typically 8m",
+            "running elapsed vs typical"
+        )
+        let queuedClock = run(id: "queued-clock", status: .queued, conclusion: nil, updatedAt: now.addingTimeInterval(-120))
+        equal(
+            RelativeTime.timestamp(for: queuedClock, typicalDuration: 8 * 60, referenceDate: now),
+            "Queued 2 minutes ago",
+            "queued ignores typical"
+        )
+
+        let fiveMinutes = run(id: "typ-5", startedAt: now.addingTimeInterval(-5 * 60), updatedAt: now)
+        let eightMinutes = run(id: "typ-8", startedAt: now.addingTimeInterval(-8 * 60), updatedAt: now)
+        let tenMinutes = run(id: "typ-10", startedAt: now.addingTimeInterval(-10 * 60), updatedAt: now)
+        let cancelledTypical = run(
+            id: "typ-cancel",
+            conclusion: .cancelled,
+            startedAt: now.addingTimeInterval(-30),
+            updatedAt: now
+        )
+        let skippedTypical = run(
+            id: "typ-skip",
+            conclusion: .skipped,
+            startedAt: now.addingTimeInterval(-20),
+            updatedAt: now
+        )
+        equal(TypicalDuration.duration(of: eightMinutes), 8 * 60, "completed duration")
+        check(TypicalDuration.duration(of: cancelledTypical) == nil, "cancelled is not typical")
+        check(TypicalDuration.duration(of: runningClock) == nil, "in-progress is not typical")
+        equal(TypicalDuration.median(of: [eightMinutes]), 8 * 60, "single sample")
+        equal(
+            TypicalDuration.median(of: [tenMinutes, fiveMinutes, eightMinutes]),
+            8 * 60,
+            "odd median"
+        )
+        equal(
+            TypicalDuration.median(of: [fiveMinutes, eightMinutes, tenMinutes, run(id: "typ-12", startedAt: now.addingTimeInterval(-12 * 60), updatedAt: now)]),
+            9 * 60,
+            "even median averages the middle pair"
+        )
+        equal(
+            TypicalDuration.median(of: [cancelledTypical, skippedTypical, eightMinutes]),
+            8 * 60,
+            "median skips cancelled and skipped"
+        )
+        check(TypicalDuration.median(of: [cancelledTypical]) == nil, "no usable samples")
+        equal(TypicalDuration.key(for: eightMinutes), "acme/app::ci", "typical key")
+        var cappedSamples: [WorkflowRun] = []
+        for index in 1...10 {
+            let updated = now.addingTimeInterval(-TimeInterval(index))
+            cappedSamples.append(
+                run(
+                    id: "lim-\(index)",
+                    startedAt: updated.addingTimeInterval(-TimeInterval(index * 60)),
+                    updatedAt: updated
+                )
+            )
+        }
+        cappedSamples.append(
+            run(
+                id: "lim-old",
+                startedAt: now.addingTimeInterval(-100 * 60),
+                updatedAt: now.addingTimeInterval(-1_000)
+            )
+        )
+        equal(
+            TypicalDuration.median(of: cappedSamples),
+            (5 * 60 + 6 * 60) / 2,
+            "median uses the 10 newest completed runs"
+        )
+
         let staleUpdate = run(
             id: "stale",
             createdAt: now.addingTimeInterval(-15 * 60),
@@ -295,10 +381,22 @@ enum RunBarCoreChecks {
         equal(snapshot.pinned.first?.latestRun?.actor, "sam", "pin hydrates actor from gh api")
         equal(snapshot.activeRuns.map(\.id), ["101"], "active CI")
         equal(snapshot.groups.flatMap(\.runs).map(\.id), ["100", "99"], "completed leftover")
+        equal(snapshot.typicalDuration(for: snapshot.activeRuns[0]), 8 * 60, "median of CI completed history")
         check(commands.contains { $0.contains("-u") && $0.contains("bryan") && !$0.contains("-w") }, "repo list uses -u")
         check(
             commands.contains { $0.contains("-w") && $0.contains("Deploy to prod") && !$0.contains("-u") && $0.contains("1") },
             "pin skips -u and fetches one run when including everyone"
+        )
+        check(
+            commands.contains { command in
+                command.contains("-w")
+                    && command.contains("CI")
+                    && command.contains("--status")
+                    && command.contains("completed")
+                    && !command.contains("-u")
+                    && command.contains("10")
+            },
+            "typical duration fetches completed runs of the active workflow"
         )
         check(
             commands.contains { command in
@@ -547,6 +645,148 @@ enum RunBarCoreChecks {
             check(false, "latest release client: \(error)")
         }
 
+        check(GitRef.isValid("main"), "main is a valid ref")
+        check(GitRef.isValid("feat/runbar"), "slash ref is valid")
+        check(!GitRef.isValid("-main"), "ref must not look like a flag")
+        check(!GitRef.isValid("../etc"), "ref rejects parent path")
+        check(WorkflowName.isValid("Deploy to prod"), "workflow name")
+        check(!WorkflowName.isValid("-w"), "workflow name rejects flags")
+        check(WorkflowInputName.isValid("build_api"), "input name")
+        check(!WorkflowInputName.isValid("build api"), "input name rejects spaces")
+        check(
+            GitHubURL.workflow(for: Repository(owner: "acme", name: "app"), path: ".github/workflows/deploy.yml")?.absoluteString
+                == "https://github.com/acme/app/actions/workflows/deploy.yml",
+            "workflow URL uses filename"
+        )
+        check(GitHubURL.workflow(for: Repository(owner: "acme", name: "app"), path: "-evil.yml") == nil, "reject flagged workflow file")
+
+        let screenshotYAML = """
+        name: Deploy
+        on:
+          workflow_dispatch:
+            inputs:
+              build_api:
+                description: Build and deploy the API
+                type: boolean
+                default: true
+              build_web:
+                description: "Build and deploy the web"
+                type: boolean
+                default: true
+        """
+        let screenshotSpec = WorkflowDispatchParser.parse(screenshotYAML)
+        check(screenshotSpec.supportsDispatch, "screenshot yaml dispatches")
+        equal(screenshotSpec.inputs.map(\.name), ["build_api", "build_web"], "input order")
+        equal(screenshotSpec.inputs[0].type, .boolean, "boolean type")
+        equal(screenshotSpec.inputs[0].label, "Build and deploy the API", "description is label")
+        equal(screenshotSpec.inputs[0].resolvedDefault, "true", "boolean default true")
+
+        let mixedYAML = """
+        on:
+          push:
+            branches: [main]
+          workflow_dispatch:
+            inputs:
+              log_level:
+                description: Log level
+                type: choice
+                options:
+                  - info
+                  - warning
+                  - debug
+                default: warning
+              env:
+                type: environment
+                required: true
+        """
+        let mixedSpec = WorkflowDispatchParser.parse(mixedYAML)
+        check(mixedSpec.supportsDispatch, "mixed on still dispatches")
+        equal(mixedSpec.inputs[0].type, .choice, "choice type")
+        equal(mixedSpec.inputs[0].options, ["info", "warning", "debug"], "choice options")
+        equal(mixedSpec.inputs[0].resolvedDefault, "warning", "choice default")
+        check(mixedSpec.needsEnvironments, "environment input")
+        equal(mixedSpec.inputs[1].required, true, "required environment")
+
+        check(WorkflowDispatchParser.parse("on: workflow_dispatch").supportsDispatch, "scalar dispatch")
+        check(WorkflowDispatchParser.parse("on: [push, workflow_dispatch]").supportsDispatch, "flow sequence dispatch")
+        check(!WorkflowDispatchParser.parse("on: [push, pull_request]").supportsDispatch, "no dispatch")
+        check(WorkflowDispatchParser.parse("on:\n  workflow_dispatch:\n").inputs.isEmpty, "empty dispatch inputs")
+
+        let defaults = WorkflowDispatchValues.defaults(from: screenshotSpec)
+        equal(defaults["build_api"], Optional("true"), "default map")
+        var unchecked = defaults
+        unchecked["build_api"] = "false"
+        let fields = WorkflowDispatchValues.fields(spec: screenshotSpec, values: unchecked)
+        equal(fields.map(\.0), ["build_api", "build_web"], "field keys")
+        equal(fields.map(\.1), ["false", "true"], "field values")
+        check(
+            WorkflowDispatchValues.missingRequired(spec: mixedSpec, values: ["log_level": "info"]).map(\.name) == ["env"],
+            "required environment is missing"
+        )
+
+        let actionProcess = FakeGhProcess()
+        let actionClient = GhClient(process: actionProcess)
+        do {
+            try await actionClient.rerun(run: run(id: "99", conclusion: .failure), failedOnly: true)
+            try await actionClient.cancel(run: run(id: "101", status: .inProgress, conclusion: nil))
+            try await actionClient.dispatchWorkflow(
+                named: "Deploy to prod",
+                in: repo,
+                ref: "main",
+                inputs: [("build_api", "true"), ("build_web", "false")]
+            )
+            let actionCommands = await actionProcess.commands
+            check(
+                actionCommands.contains { $0 == ["run", "rerun", "99", "-R", "acme/app", "--failed"] },
+                "rerun failed argv"
+            )
+            check(
+                actionCommands.contains { $0 == ["run", "cancel", "101", "-R", "acme/app"] },
+                "cancel argv"
+            )
+            check(
+                actionCommands.contains {
+                    $0 == ["workflow", "run", "Deploy to prod", "-R", "acme/app", "--ref", "main", "-f", "build_api=true", "-f", "build_web=false"]
+                },
+                "dispatch argv"
+            )
+            do {
+                try await actionClient.rerun(run: run(id: "not-a-number"), failedOnly: false)
+                check(false, "non-numeric run id should fail")
+            } catch GhError.failed {
+                check(true, "reject non-numeric run id")
+            }
+            do {
+                try await actionClient.dispatchWorkflow(named: "Deploy", in: repo, ref: "-main")
+                check(false, "flag ref should fail")
+            } catch GhError.failed {
+                check(true, "reject flagged ref")
+            }
+            let afterRejected = await actionProcess.commands
+            equal(afterRejected.count, actionCommands.count, "invalid rerun/dispatch do not spawn gh")
+
+            let dispatchContext = try await actionClient.workflowDispatchContext(
+                for: PinnedWorkflow(repository: repo, workflowName: "Deploy to prod"),
+                ref: "main"
+            )
+            check(dispatchContext.spec.supportsDispatch, "context parses yaml")
+            equal(dispatchContext.spec.inputs.map(\.name), ["build_api", "build_web"], "context inputs")
+            equal(dispatchContext.defaultBranch, "main", "default branch")
+            equal(dispatchContext.branches.contains("main"), true, "branches include main")
+            check(dispatchContext.githubURL?.absoluteString == "https://github.com/acme/app/actions/workflows/deploy.yml", "context workflow URL")
+            let contextCommands = await actionProcess.commands
+            check(
+                contextCommands.contains { $0 == ["api", "repos/acme/app", "--jq", ".default_branch"] },
+                "default branch argv"
+            )
+            check(
+                contextCommands.contains { $0.starts(with: ["workflow", "view", "Deploy to prod"]) && $0.contains("--yaml") && $0.contains("main") },
+                "workflow yaml argv"
+            )
+        } catch {
+            check(false, "run actions client: \(error)")
+        }
+
         if failures == 0 {
             print("RunBarCoreChecks: all passed")
         } else {
@@ -564,6 +804,15 @@ private actor FakeGhProcess: GhRunning {
     func run(_ arguments: [String]) async throws -> String {
         storedCommands.append(arguments)
         if arguments.starts(with: ["run", "list"]) {
+            if arguments.contains("--status") {
+                if let workflowIndex = arguments.firstIndex(of: "-w"),
+                   arguments.indices.contains(workflowIndex + 1),
+                   arguments[workflowIndex + 1] == "CI"
+                {
+                    return ciHistoryJSON
+                }
+                return "[]"
+            }
             if let workflowIndex = arguments.firstIndex(of: "-w"),
                arguments.indices.contains(workflowIndex + 1),
                arguments[workflowIndex + 1] == "Deploy to prod"
@@ -571,6 +820,34 @@ private actor FakeGhProcess: GhRunning {
                 return deployOnlyJSON
             }
             return fixtureJSON
+        }
+        if arguments.starts(with: ["run", "rerun"]) || arguments.starts(with: ["run", "cancel"]) {
+            return ""
+        }
+        if arguments.starts(with: ["workflow", "run"]) {
+            return ""
+        }
+        if arguments.starts(with: ["workflow", "view"]) {
+            return deployWorkflowYAML
+        }
+        if arguments.starts(with: ["workflow", "list"]) {
+            return workflowListJSON
+        }
+        if arguments.first == "api",
+           arguments.contains("--jq"),
+           arguments.contains(".default_branch")
+        {
+            return "main"
+        }
+        if arguments.first == "api",
+           arguments.contains(where: { $0.contains("/branches") })
+        {
+            return #"[{"name":"main"},{"name":"feat/runbar"}]"#
+        }
+        if arguments.first == "api",
+           arguments.contains(where: { $0.contains("/environments") })
+        {
+            return #"{"environments":[{"name":"production"}]}"#
         }
         if arguments.first == "api",
            arguments.contains(where: { $0.contains("/actions/runs") })
@@ -596,6 +873,100 @@ private actor FakeGhProcess: GhRunning {
         throw GhError.failed(code: 1, message: "unexpected \(arguments.joined(separator: " "))")
     }
 }
+
+private let ciHistoryJSON = """
+[
+  {
+    "databaseId": 91,
+    "workflowName": "CI",
+    "displayTitle": "feat: menu bar",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "aa1111",
+    "name": "CI",
+    "startedAt": "2026-08-19T11:50:00Z",
+    "updatedAt": "2026-08-19T12:00:00Z",
+    "url": "https://github.com/acme/app/actions/runs/91"
+  },
+  {
+    "databaseId": 92,
+    "workflowName": "CI",
+    "displayTitle": "feat: menu bar",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "bb2222",
+    "name": "CI",
+    "startedAt": "2026-08-19T11:22:00Z",
+    "updatedAt": "2026-08-19T11:30:00Z",
+    "url": "https://github.com/acme/app/actions/runs/92"
+  },
+  {
+    "databaseId": 93,
+    "workflowName": "CI",
+    "displayTitle": "feat: menu bar",
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "cc3333",
+    "name": "CI",
+    "startedAt": "2026-08-19T10:54:00Z",
+    "updatedAt": "2026-08-19T11:00:00Z",
+    "url": "https://github.com/acme/app/actions/runs/93"
+  },
+  {
+    "databaseId": 94,
+    "workflowName": "CI",
+    "displayTitle": "feat: menu bar",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "dd4444",
+    "name": "CI",
+    "startedAt": "2026-08-19T10:18:00Z",
+    "updatedAt": "2026-08-19T10:30:00Z",
+    "url": "https://github.com/acme/app/actions/runs/94"
+  },
+  {
+    "databaseId": 95,
+    "workflowName": "CI",
+    "displayTitle": "feat: menu bar",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "ee5555",
+    "name": "CI",
+    "startedAt": "2026-08-19T10:00:00Z",
+    "updatedAt": "2026-08-19T10:01:00Z",
+    "url": "https://github.com/acme/app/actions/runs/95"
+  }
+]
+"""
+
+private let deployWorkflowYAML = """
+name: Deploy to prod
+on:
+  workflow_dispatch:
+    inputs:
+      build_api:
+        description: Build and deploy the API
+        type: boolean
+        default: true
+      build_web:
+        description: Build and deploy the web
+        type: boolean
+        default: true
+"""
+
+private let workflowListJSON = """
+[{"name":"Deploy to prod","path":".github/workflows/deploy.yml","state":"active"}]
+"""
 
 private let deployOnlyJSON = """
 [

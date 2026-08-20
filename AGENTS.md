@@ -35,7 +35,7 @@ Keep GitHub JSON, filtering, grouping, and `ActivitySummary` in RunBarCore. View
 ## Product rules
 
 - Auth stays in `gh`. Never add OAuth, a PAT field, or a token file. Settings are `UserDefaults` (`runbar.settings`) plus `~/.config/runbar/config.json` (not credentials). Write that directory `0700` and the file `0600`.
-- Only open run URLs that are `https` on `github.com` / `*.github.com`. Validate `owner/name` against GitHub’s identifier charset before passing them to `gh`.
+- Only open GitHub `https` links on `github.com` / `*.github.com`. Validate `owner/name`, git refs, workflow names, input keys, and run ids before passing them to `gh`.
 - Pins use `gh run list -w`, ignore event filters, and sit at the top — one latest run per pin. `Show everyone's runs` (default on) skips `-u` so that latest run can belong to someone else. Off applies the actor filter like the rest of the list. `gh run list` has no actor field, so pin rows hydrate `actor.login` from `gh api repos/<owner>/<name>/actions/runs`. `RunFilter.merge` must drop every pin run ID from the filtered list.
 - Failure tint: a failed run in the last 30 minutes **or** a pin whose latest run failed, even if that run is hours old (`ActivitySummary`).
 - Polling: 15s when the panel is open or a run is active, 45s idle, skip while asleep (`PollingPolicy`).
@@ -48,6 +48,7 @@ Keep GitHub JSON, filtering, grouping, and `ActivitySummary` in RunBarCore. View
 - Panel layout: [`docs/ui.md`](docs/ui.md) (CodexBar grammar: identity / scan / commands). Site: [`design.md`](design.md).
 - Run colors live in `RunBarTheme` (success / failure / in-progress). Do not add a brand yellow to chrome.
 - Copy is short, specific, present tense. Name the thing (`gh`, Deploy to prod, `make install`). Skip “tiny / delightful / powerful”.
+- Running rows may show elapsed vs typical duration as text (`3m · typically 4m`). Never a progress bar.
 - After panel UI changes, update `docs/assets/screenshot.png` and `docs/assets/screenshot-failure.png`.
 
 ## Site

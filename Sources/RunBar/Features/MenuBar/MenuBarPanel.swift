@@ -4,7 +4,7 @@ import SwiftUI
 
 struct MenuBarPanel: View {
     private enum WindowID {
-        static let settings = "settings"
+        static let settings = RunBarWindow.settings
     }
 
     @Environment(\.openWindow) private var openWindow
@@ -108,14 +108,21 @@ struct MenuBarPanel: View {
                         LazyVStack(alignment: .leading, spacing: 16) {
                             if !store.snapshot.pinned.isEmpty {
                                 PinnedSection(
+                                    store: store,
                                     pins: store.snapshot.pinned,
                                     failureCount: store.summary.pinnedFailureCount,
+                                    typicalDurations: store.snapshot.typicalDurations,
                                     referenceDate: context.date
                                 )
                             }
 
                             if !store.snapshot.activeRuns.isEmpty {
-                                ActiveSection(runs: store.snapshot.activeRuns, referenceDate: context.date)
+                                ActiveSection(
+                                    store: store,
+                                    runs: store.snapshot.activeRuns,
+                                    typicalDurations: store.snapshot.typicalDurations,
+                                    referenceDate: context.date
+                                )
                             }
 
                             if store.snapshot.groups.isEmpty
@@ -125,7 +132,12 @@ struct MenuBarPanel: View {
                                 EmptyMatchingView()
                             } else {
                                 ForEach(store.snapshot.groups) { group in
-                                    RepositorySection(group: group, referenceDate: context.date)
+                                    RepositorySection(
+                                        store: store,
+                                        group: group,
+                                        typicalDurations: store.snapshot.typicalDurations,
+                                        referenceDate: context.date
+                                    )
                                 }
                             }
                         }
@@ -264,8 +276,10 @@ private struct FooterLink: View {
 }
 
 private struct PinnedSection: View {
+    let store: AppStore
     let pins: [PinSnapshot]
     var failureCount: Int = 0
+    var typicalDurations: [String: TimeInterval] = [:]
     let referenceDate: Date
 
     var body: some View {
@@ -279,7 +293,12 @@ private struct PinnedSection: View {
             )
             VStack(spacing: 8) {
                 ForEach(pins) { pin in
-                    PinRow(snapshot: pin, referenceDate: referenceDate)
+                    PinRow(
+                        store: store,
+                        snapshot: pin,
+                        referenceDate: referenceDate,
+                        typicalDuration: pin.latestRun.flatMap { typicalDurations[TypicalDuration.key(for: $0)] }
+                    )
                 }
             }
         }
@@ -287,7 +306,9 @@ private struct PinnedSection: View {
 }
 
 private struct ActiveSection: View {
+    let store: AppStore
     let runs: [WorkflowRun]
+    var typicalDurations: [String: TimeInterval] = [:]
     let referenceDate: Date
 
     var body: some View {
@@ -295,7 +316,13 @@ private struct ActiveSection: View {
             SectionLabel(title: "Active", systemName: "bolt.fill", count: runs.count, tinted: true, tint: RunBarTheme.inProgress)
             VStack(spacing: 8) {
                 ForEach(runs) { run in
-                    RunRow(run: run, referenceDate: referenceDate, repositoryLabel: run.repository.fullName)
+                    RunRow(
+                        store: store,
+                        run: run,
+                        referenceDate: referenceDate,
+                        repositoryLabel: run.repository.fullName,
+                        typicalDuration: typicalDurations[TypicalDuration.key(for: run)]
+                    )
                 }
             }
         }
@@ -303,7 +330,9 @@ private struct ActiveSection: View {
 }
 
 private struct RepositorySection: View {
+    let store: AppStore
     let group: RepositoryRunGroup
+    var typicalDurations: [String: TimeInterval] = [:]
     let referenceDate: Date
 
     var body: some View {
@@ -329,7 +358,13 @@ private struct RepositorySection: View {
 
             VStack(spacing: 8) {
                 ForEach(group.runs) { run in
-                    RunRow(run: run, referenceDate: referenceDate, compact: true)
+                    RunRow(
+                        store: store,
+                        run: run,
+                        referenceDate: referenceDate,
+                        typicalDuration: typicalDurations[TypicalDuration.key(for: run)],
+                        compact: true
+                    )
                 }
             }
         }

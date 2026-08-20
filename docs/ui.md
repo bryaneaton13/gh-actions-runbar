@@ -2,7 +2,7 @@
 
 The menu is a scan surface, not a mini app.
 
-Layout language comes from [CodexBar](https://github.com/steipete/CodexBar): a native macOS menu in three bands — identity, scan, commands — separated by hairlines. Do not copy CodexBar’s product (provider tabs, usage meters, cost). GitHub Actions has no reliable percent-complete, so RunBar never draws a fake progress bar.
+Layout language comes from [CodexBar](https://github.com/steipete/CodexBar): a native macOS menu in three bands — identity, scan, commands — separated by hairlines. Do not copy CodexBar’s product (provider tabs, usage meters, cost). GitHub Actions has no reliable percent-complete, so RunBar never draws a fake progress bar. Running rows may show elapsed vs typical duration as text (`3m · typically 4m`).
 
 Marketing site rules stay in [`design.md`](../design.md). This file is the bar and Settings.
 
@@ -11,26 +11,26 @@ Marketing site rules stay in [`design.md`](../design.md). This file is the bar a
 Click the status item. See what is pinned and what is running. Click a row to open that run on GitHub. Everything else is a menu command.
 
 ```
-┌──────────────────────────────────┐
-│  2 running            1 watched  │  identity
-│  Updated 8s ago · gh ok          │
-├──────────────────────────────────┤
-│  Pinned                          │  scan
-│  ●  Deploy to prod          1h   │
-│     owner/repo · workflow_dispatch│
-│                                  │
-│  Active                          │
-│  ◐  Dev Deploy              3m   │
-│  ◐  CodeQL                 12s   │
-│                                  │
-│  owner/repo                      │
-│  ✓  Playwright E2E          2h   │
-│  ✓  API Tests               3h   │
-├──────────────────────────────────┤
-│  Refresh                    ⌘R   │  commands
-│  Settings…                  ⌘,   │
-│  Quit                       ⌘Q   │
-└──────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  2 running                   1 watched  │  identity
+│  Updated 8s ago · gh ok                 │
+├─────────────────────────────────────────┤
+│  Pinned                                 │  scan
+│  ●  Deploy to prod                  1h  │
+│     owner/repo · workflow_dispatch      │
+│                                         │
+│  Active                                 │
+│  ◐  Dev Deploy        3m · typically 4m │
+│  ◐  CodeQL                          12s │
+│                                         │
+│  owner/repo                             │
+│  ✓  Playwright E2E                  2h  │
+│  ✓  API Tests                       3h  │
+├─────────────────────────────────────────┤
+│  Refresh                           ⌘R   │  commands
+│  Settings…                         ⌘,   │
+│  Quit                              ⌘Q   │
+└─────────────────────────────────────────┘
 ```
 
 ## Borrow / skip (CodexBar)
@@ -73,7 +73,7 @@ SF Pro. Contrast from size and weight, not a second family. Times and the bar co
 | `{typography.row}` | `.body` | regular | Workflow name |
 | `{typography.meta}` | `.footnote` | regular | Branch · actor · event, freshness |
 | `{typography.section}` | `.caption` | semibold | Pinned, Active, `owner/repo` |
-| `{typography.time}` | `.footnote.monospacedDigit()` | regular | `3m`, `1h`, `12s` |
+| `{typography.time}` | `.footnote.monospacedDigit()` | regular | `3m`, `1h`, `12s`, `3m · typically 4m` |
 | `{typography.bar}` | 12pt rounded, semibold, monospaced digits | — | Status item count |
 | `{typography.command}` | `.body` | regular | Refresh, Settings…, Quit |
 
@@ -135,7 +135,7 @@ Three group types, in this order, omitted when empty:
 2. **Active** — in-progress and queued, newest first.
 3. **Per repository** — remaining runs, `owner/repo` as `{typography.section}`, truncation `.middle`.
 
-**Row.** One line of `{typography.row}` (workflow name). One line of `{typography.meta}` (repo if needed · branch · actor · event). Trailing `{typography.time}`. Click opens `htmlURL`. Context menu: Open in GitHub, Copy run URL.
+**Row.** One line of `{typography.row}` (workflow name). One line of `{typography.meta}` (repo if needed · branch · actor · event). Trailing `{typography.time}`: elapsed while running (`3m`), plus ` · typically 4m` when that workflow has a median of recent completed runs. No history stays elapsed-only. Completed rows stay relative (`2h`). Click opens `htmlURL`. Context menu: Open in GitHub, Copy run URL, Rerun / Rerun failed jobs / Cancel run, Pin this workflow or Unpin, and **Run workflow…** on pins.
 
 **Empty scan.** `{typography.meta}`: “No matching runs.” No tray illustration, no bordered empty card.
 
@@ -160,7 +160,7 @@ While Refresh is in flight, the row label stays “Refresh” and a small `Progr
 
 Grouped `Form` in a window, not in the popover. Minimum ~540×520. Opened only from Settings….
 
-Sections, in order: Account, Repositories, Filters, Pins, General, About. Pins include **Show everyone's runs**. About holds version, update status (**Check for Updates**, Homebrew copy `brew upgrade` or Open GitHub Releases), website, and source links.
+Sections, in order: Account, Repositories, Filters, Pins, General, About. Pins include **Show everyone's runs** and a play control that opens **Run workflow**. **Run workflow** is a separate small grouped `Form` window (branch picker + inputs), not a panel overlay. About holds version, update status (**Check for Updates**, Homebrew copy `brew upgrade` or Open GitHub Releases), website, and source links.
 
 ## Motion
 
@@ -195,6 +195,7 @@ Short, specific, present tense. Name `gh`, the workflow, the repo.
 - Don’t add provider-style tabs, usage bars, or cost rows.
 - Don’t restyle Settings as a sidebar unless the form actually needs navigation.
 - Don’t introduce a brand yellow outside `{colors.in-progress}` on a running glyph or count.
+- Don’t draw a determinate progress bar for Actions. Elapsed vs typical is text.
 
 ## Current → target
 

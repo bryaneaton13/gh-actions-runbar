@@ -41,8 +41,9 @@ Until at least one repository or pin is added, the panel shows an empty state wi
 - Event toggles cover `push`, `pull_request`, `workflow_dispatch`, and `merge_group`.
 - **Pin a workflow** (for example Deploy to prod) to keep it at the top. Pins ignore event filters.
 - **Show everyone's runs** (under Pinned workflows, on by default) skips `-u` on those pins so you still see the job when someone else triggers it. Turn it off if you only want your own pin runs.
+- Right-click a run to rerun it, rerun failed jobs, or cancel it. Right-click a pin (or use the play control in Settings) to **Run workflow** with that file’s inputs.
 
-Click a run to open it on GitHub. RunBar only follows `https` links on `github.com`.
+Click a run to open it on GitHub. A running row shows elapsed time, and `typically 4m` when that workflow has recent completed runs. RunBar only follows `https` links on `github.com`. Dispatching a workflow may need the `workflow` scope: `gh auth refresh -s workflow`.
 
 ## 5. Updates
 

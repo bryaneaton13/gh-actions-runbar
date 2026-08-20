@@ -3,10 +3,6 @@ import SwiftUI
 
 @main
 struct RunBarApp: App {
-    private enum WindowID {
-        static let settings = "settings"
-    }
-
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var store = AppStore()
 
@@ -18,10 +14,16 @@ struct RunBarApp: App {
         }
         .menuBarExtraStyle(.window)
 
-        Window("Settings", id: WindowID.settings) {
+        Window("Settings", id: RunBarWindow.settings) {
             SettingsView(store: store)
         }
         .defaultSize(width: 560, height: 560)
+        .windowResizability(.contentMinSize)
+
+        Window("Run workflow", id: RunBarWindow.runWorkflow) {
+            WorkflowDispatchView(store: store)
+        }
+        .defaultSize(width: 440, height: 390)
         .windowResizability(.contentMinSize)
     }
 }

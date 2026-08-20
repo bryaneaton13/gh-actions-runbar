@@ -29,6 +29,7 @@ final class AppStore {
     var isPopoverOpen = false
     var isSleeping = false
     var updateState: UpdateState = .idle
+    var dispatchRequest: DispatchRequest?
     let installOrigin = InstallOrigin.from(bundlePath: Bundle.main.bundleURL.path)
 
     @ObservationIgnored
@@ -192,6 +193,72 @@ final class AppStore {
 
     func fetchWorkflows(in repository: Repository) async throws -> [GhWorkflowDTO] {
         try await client.listWorkflows(in: repository)
+    }
+
+    func pinMatching(_ run: WorkflowRun) -> PinnedWorkflow? {
+        settings.pins.first { pin in
+            pin.repository == run.repository
+                && pin.workflowName.compare(run.workflowName, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }
+    }
+
+    func beginDispatch(pin: PinnedWorkflow, preferredRef: String? = nil) {
+        dispatchRequest = DispatchRequest(pin: pin, preferredRef: preferredRef)
+    }
+
+    func clearDispatch() {
+        dispatchRequest = nil
+    }
+
+    func loadDispatchContext(ref: String?) async throws -> WorkflowDispatchContext {
+        guard let request = dispatchRequest else {
+            throw GhError.failed(code: 1, message: "Choose a pinned workflow first.")
+        }
+        return try await client.workflowDispatchContext(for: request.pin, ref: ref ?? request.preferredRef)
+    }
+
+    func dispatchWorkflow(ref: String, inputs: [(String, String)]) async throws {
+        guard let request = dispatchRequest else {
+            throw GhError.failed(code: 1, message: "Choose a pinned workflow first.")
+        }
+        try await client.dispatchWorkflow(
+            named: request.pin.workflowName,
+            in: request.pin.repository,
+            ref: ref,
+            inputs: inputs
+        )
+        dispatchRequest = nil
+        await refresh(userInitiated: true)
+    }
+
+    func rerun(_ run: WorkflowRun, failedOnly: Bool) async {
+        do {
+            try await client.rerun(run: run, failedOnly: failedOnly)
+            await refresh(userInitiated: true)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func confirmCancel(_ run: WorkflowRun) {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Cancel this run?"
+        alert.informativeText = "\(run.name) on \(run.repository.fullName) stops on GitHub."
+        alert.addButton(withTitle: "Cancel Run")
+        alert.addButton(withTitle: "Keep Running")
+        alert.alertStyle = .warning
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        Task { await cancel(run) }
+    }
+
+    func cancel(_ run: WorkflowRun) async {
+        do {
+            try await client.cancel(run: run)
+            await refresh(userInitiated: true)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func checkForUpdate(force: Bool = false) async {
@@ -403,4 +470,11 @@ private struct RepositoryBrowserCache {
     var isFresh: Bool {
         Date.now.timeIntervalSince(fetchedAt) < 5 * 60
     }
+}
+
+struct DispatchRequest: Equatable, Identifiable {
+    var pin: PinnedWorkflow
+    var preferredRef: String?
+
+    var id: String { pin.id }
 }

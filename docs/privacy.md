@@ -5,7 +5,7 @@ RunBar is a local menu bar app. It does not have its own GitHub account, OAuth a
 ## What RunBar uses
 
 - The **GitHub CLI** (`gh`) already installed and signed in on your Mac.
-- `gh` subprocesses such as `gh auth status`, `gh api user`, `gh run list`, `gh workflow list`, repo search, `gh api repos/.../actions/runs` (actor logins for pinned runs), and `gh release view` of `bryaneaton13/gh-actions-runbar` (at most once per 24 hours, plus Check for Updates in Settings). Each call has a 30-second timeout, a 1 MiB output cap, and is killed if it hangs.
+- `gh` subprocesses such as `gh auth status`, `gh api user`, `gh run list` (including completed history of an in-progress workflow for typical duration), `gh run rerun`, `gh run cancel`, `gh workflow list`, `gh workflow view --yaml`, `gh workflow run`, repo search, `gh api` for pin actors / branches / environments, and `gh release view` of `bryaneaton13/gh-actions-runbar` (at most once per 24 hours, plus Check for Updates in Settings). Each call has a 30-second timeout, a 1 MiB output cap, and is killed if it hangs.
 - Settings in `UserDefaults` and a mirror file at `~/.config/runbar/config.json` (repository list, filters, pins, launch-at-login). Last update-check time lives only in `UserDefaults` (`runbar.update`). Those files are not a credential store. RunBar writes the config directory as `0700` and the file as `0600`.
 
 ## What RunBar does not do

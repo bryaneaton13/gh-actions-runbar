@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SettingsView: View {
     let store: AppStore
+    @Environment(\.openWindow) private var openWindow
     @State private var repositoryInput = ""
     @State private var repositoryInputError: String?
     @State private var showRepositoryPicker = false
@@ -180,17 +181,31 @@ struct SettingsView: View {
                         }
                         Spacer()
                         Button {
+                            store.beginDispatch(pin: pin)
+                            NSApp.activate(ignoringOtherApps: true)
+                            openWindow(id: RunBarWindow.runWorkflow)
+                        } label: {
+                            Image(systemName: "play.circle")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Run workflow")
+                        .disabled(!store.authState.isReady)
+                        Button {
                             store.removePin(pin)
                         } label: {
                             Image(systemName: "minus.circle")
                                 .foregroundStyle(RunBarTheme.failure)
                         }
                         .buttonStyle(.plain)
+                        .help("Remove")
                     }
                 }
             }
         } header: {
             Text("Pinned workflows")
+        } footer: {
+            Text("Right-click a pin in the menu, or use the play control, to run that workflow with its inputs.")
         }
     }
 

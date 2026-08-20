@@ -239,6 +239,18 @@ public struct GhReleaseDTO: Decodable, Sendable, Equatable {
     }
 }
 
+public struct GhBranchDTO: Decodable, Sendable, Equatable {
+    public let name: String
+}
+
+public struct GhEnvironmentsPageDTO: Decodable, Sendable, Equatable {
+    public let environments: [GhEnvironmentDTO]?
+}
+
+public struct GhEnvironmentDTO: Decodable, Sendable, Equatable {
+    public let name: String
+}
+
 private extension String {
     var nilIfEmpty: String? {
         isEmpty ? nil : self

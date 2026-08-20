@@ -4,6 +4,7 @@ public struct WorkflowSnapshot: Sendable, Equatable {
     public var pinned: [PinSnapshot]
     public var groups: [RepositoryRunGroup]
     public var activeRuns: [WorkflowRun]
+    public var typicalDurations: [String: TimeInterval]
     public var fetchedAt: Date
     public var warnings: [String]
 
@@ -11,14 +12,20 @@ public struct WorkflowSnapshot: Sendable, Equatable {
         pinned: [PinSnapshot] = [],
         groups: [RepositoryRunGroup] = [],
         activeRuns: [WorkflowRun] = [],
+        typicalDurations: [String: TimeInterval] = [:],
         fetchedAt: Date = .now,
         warnings: [String] = []
     ) {
         self.pinned = pinned
         self.groups = groups
         self.activeRuns = activeRuns
+        self.typicalDurations = typicalDurations
         self.fetchedAt = fetchedAt
         self.warnings = warnings
+    }
+
+    public func typicalDuration(for run: WorkflowRun) -> TimeInterval? {
+        typicalDurations[TypicalDuration.key(for: run)]
     }
 
     public var allRuns: [WorkflowRun] {
@@ -245,6 +252,9 @@ public struct GhClient: Sendable {
     }
 
     public func listWorkflows(in repository: Repository) async throws -> [GhWorkflowDTO] {
+        guard repository.isValid else {
+            throw GhError.failed(code: 1, message: "Invalid repository.")
+        }
         let output = try await process.run([
             "workflow", "list",
             "-R", repository.fullName,
@@ -257,6 +267,180 @@ public struct GhClient: Sendable {
         } catch {
             throw GhError.decoding(error.localizedDescription)
         }
+    }
+
+    public func rerun(run: WorkflowRun, failedOnly: Bool = false) async throws {
+        try requireValid(run.repository)
+        guard isRunID(run.id) else {
+            throw GhError.failed(code: 1, message: "Invalid run id.")
+        }
+        var arguments = ["run", "rerun", run.id, "-R", run.repository.fullName]
+        if failedOnly {
+            arguments.append("--failed")
+        }
+        _ = try await process.run(arguments)
+    }
+
+    public func cancel(run: WorkflowRun) async throws {
+        try requireValid(run.repository)
+        guard isRunID(run.id) else {
+            throw GhError.failed(code: 1, message: "Invalid run id.")
+        }
+        _ = try await process.run([
+            "run", "cancel", run.id, "-R", run.repository.fullName,
+        ])
+    }
+
+    public func dispatchWorkflow(
+        named name: String,
+        in repository: Repository,
+        ref: String,
+        inputs: [(String, String)] = []
+    ) async throws {
+        try requireValid(repository)
+        guard WorkflowName.isValid(name) else {
+            throw GhError.failed(code: 1, message: "Invalid workflow name.")
+        }
+        guard let ref = GitRef.parse(ref) else {
+            throw GhError.failed(code: 1, message: "Invalid branch.")
+        }
+        var arguments = [
+            "workflow", "run", name,
+            "-R", repository.fullName,
+            "--ref", ref,
+        ]
+        for (key, value) in inputs {
+            guard WorkflowInputName.isValid(key) else { continue }
+            arguments.append(contentsOf: ["-f", "\(key)=\(value)"])
+        }
+        _ = try await process.run(arguments)
+    }
+
+    public func workflowDispatchContext(
+        for pin: PinnedWorkflow,
+        ref: String? = nil
+    ) async throws -> WorkflowDispatchContext {
+        try requireValid(pin.repository)
+        guard WorkflowName.isValid(pin.workflowName) else {
+            throw GhError.failed(code: 1, message: "Invalid workflow name.")
+        }
+
+        async let defaultBranchTask = defaultBranch(in: pin.repository)
+        async let branchesTask = listBranches(in: pin.repository)
+        async let workflowsTask = listWorkflows(in: pin.repository)
+
+        let defaultBranch = try await defaultBranchTask
+        let branches = (try? await branchesTask) ?? [defaultBranch]
+        let workflows = (try? await workflowsTask) ?? []
+        let selectedRef = GitRef.parse(ref ?? "") ?? defaultBranch
+        let yaml = try await workflowYAML(
+            named: pin.workflowName,
+            in: pin.repository,
+            ref: selectedRef
+        )
+        var spec = WorkflowDispatchParser.parse(yaml)
+        let environments: [String]
+        if spec.needsEnvironments {
+            environments = (try? await listEnvironments(in: pin.repository)) ?? []
+            spec.inputs = spec.inputs.map { input in
+                guard input.type == .environment else { return input }
+                var copy = input
+                if copy.options.isEmpty {
+                    copy.options = environments
+                }
+                return copy
+            }
+        } else {
+            environments = []
+        }
+
+        let path = workflows.first { $0.name == pin.workflowName }?.path
+        var orderedBranches = branches
+        if !orderedBranches.contains(defaultBranch) {
+            orderedBranches.insert(defaultBranch, at: 0)
+        }
+        if let selectedRef = GitRef.parse(ref ?? ""), !orderedBranches.contains(selectedRef) {
+            orderedBranches.insert(selectedRef, at: 0)
+        }
+
+        return WorkflowDispatchContext(
+            pin: pin,
+            spec: spec,
+            defaultBranch: defaultBranch,
+            branches: orderedBranches,
+            environments: environments,
+            workflowPath: path
+        )
+    }
+
+    public func defaultBranch(in repository: Repository) async throws -> String {
+        try requireValid(repository)
+        let output = try await process.run([
+            "api",
+            "repos/\(repository.fullName)",
+            "--jq",
+            ".default_branch",
+        ])
+        guard let branch = GitRef.parse(output) else {
+            throw GhError.decoding("Could not read the default branch.")
+        }
+        return branch
+    }
+
+    public func listBranches(in repository: Repository) async throws -> [String] {
+        try requireValid(repository)
+        let output = try await process.run([
+            "api",
+            "repos/\(repository.fullName)/branches?per_page=100",
+        ])
+        if output.isEmpty || output == "[]" { return [] }
+        do {
+            let payload = try GitHubJSON.decoder().decode([GhBranchDTO].self, from: Data(output.utf8))
+            return payload.compactMap { GitRef.parse($0.name) }
+        } catch {
+            throw GhError.decoding(error.localizedDescription)
+        }
+    }
+
+    public func listEnvironments(in repository: Repository) async throws -> [String] {
+        try requireValid(repository)
+        let output = try await process.run([
+            "api",
+            "repos/\(repository.fullName)/environments?per_page=100",
+        ])
+        if output.isEmpty || output == "{}" || output == "[]" { return [] }
+        do {
+            let payload = try GitHubJSON.decoder().decode(GhEnvironmentsPageDTO.self, from: Data(output.utf8))
+            return (payload.environments ?? []).map(\.name).filter { !$0.isEmpty }
+        } catch {
+            throw GhError.decoding(error.localizedDescription)
+        }
+    }
+
+    public func workflowYAML(named name: String, in repository: Repository, ref: String) async throws -> String {
+        try requireValid(repository)
+        guard WorkflowName.isValid(name) else {
+            throw GhError.failed(code: 1, message: "Invalid workflow name.")
+        }
+        guard let ref = GitRef.parse(ref) else {
+            throw GhError.failed(code: 1, message: "Invalid branch.")
+        }
+        return try await process.run([
+            "workflow", "view", name,
+            "-R", repository.fullName,
+            "--yaml",
+            "--ref", ref,
+        ])
+    }
+
+    private func requireValid(_ repository: Repository) throws {
+        guard repository.isValid else {
+            throw GhError.failed(code: 1, message: "Invalid repository.")
+        }
+    }
+
+    private func isRunID(_ value: String) -> Bool {
+        !value.isEmpty && value.allSatisfy { $0.isASCII && $0.isNumber }
     }
 
     public func fetchSnapshot(
@@ -278,7 +462,8 @@ public struct GhClient: Sendable {
                 user: rule.onlyMyRuns ? login : nil,
                 workflow: nil,
                 limit: runsPerRepo,
-                actorStamp: stampedActor
+                actorStamp: stampedActor,
+                status: nil
             )
         }
         async let pinTask = throttledMap(pins, concurrency: Self.maxConcurrency) { pin in
@@ -287,7 +472,8 @@ public struct GhClient: Sendable {
                 user: pinUser,
                 workflow: pin.workflowName,
                 limit: 1,
-                actorStamp: pinUser
+                actorStamp: pinUser,
+                status: nil
             )
         }
 
@@ -342,14 +528,78 @@ public struct GhClient: Sendable {
             excluding: Set(active.map(\.id)),
             maxPerRepo: 3
         )
+        let typicalDurations = await fetchTypicalDurations(
+            repoResults: repoResults,
+            pinResults: pinResults
+        )
 
         return WorkflowSnapshot(
             pinned: merged.pinned,
             groups: groups,
             activeRuns: active,
+            typicalDurations: typicalDurations,
             fetchedAt: .now,
             warnings: warnings
         )
+    }
+
+    private func fetchTypicalDurations(
+        repoResults: [Result<[WorkflowRun], GhError>],
+        pinResults: [Result<[WorkflowRun], GhError>]
+    ) async -> [String: TimeInterval] {
+        var runsByKey: [String: [WorkflowRun]] = [:]
+
+        func collect(_ runs: [WorkflowRun]) {
+            for run in runs {
+                runsByKey[TypicalDuration.key(for: run), default: []].append(run)
+            }
+        }
+
+        for result in repoResults {
+            if case let .success(runs) = result {
+                collect(runs)
+            }
+        }
+        for result in pinResults {
+            if case let .success(runs) = result {
+                collect(runs)
+            }
+        }
+
+        var seenIdentities = Set<String>()
+        var identities: [(repository: Repository, workflowName: String)] = []
+        for run in runsByKey.values.flatMap({ $0 }) where run.displayState == .running {
+            let key = TypicalDuration.key(for: run)
+            guard seenIdentities.insert(key).inserted else { continue }
+            let name = run.workflowName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { continue }
+            identities.append((run.repository, name))
+        }
+
+        let historyResults = await throttledMap(identities, concurrency: Self.maxConcurrency) { identity in
+            await self.fetchRuns(
+                repository: identity.repository,
+                user: nil,
+                workflow: identity.workflowName,
+                limit: TypicalDuration.sampleLimit,
+                actorStamp: nil,
+                status: "completed"
+            )
+        }
+        for result in historyResults {
+            if case let .success(runs) = result {
+                collect(runs)
+            }
+        }
+
+        var typicalDurations: [String: TimeInterval] = [:]
+        for identity in identities {
+            let key = TypicalDuration.key(repository: identity.repository, workflowName: identity.workflowName)
+            if let median = TypicalDuration.median(of: runsByKey[key] ?? []) {
+                typicalDurations[key] = median
+            }
+        }
+        return typicalDurations
     }
 
     private func fetchRuns(
@@ -357,7 +607,8 @@ public struct GhClient: Sendable {
         user: String?,
         workflow: String?,
         limit: Int,
-        actorStamp: String?
+        actorStamp: String?,
+        status: String?
     ) async -> Result<[WorkflowRun], GhError> {
         var arguments = [
             "run", "list",
@@ -370,6 +621,9 @@ public struct GhClient: Sendable {
         }
         if let workflow, !workflow.isEmpty {
             arguments.append(contentsOf: ["-w", workflow])
+        }
+        if let status, !status.isEmpty {
+            arguments.append(contentsOf: ["--status", status])
         }
 
         do {

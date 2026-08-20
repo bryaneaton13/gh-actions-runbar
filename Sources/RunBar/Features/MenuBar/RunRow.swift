@@ -3,11 +3,15 @@ import RunBarCore
 import SwiftUI
 
 struct RunRow: View {
+    let store: AppStore
     let run: WorkflowRun
     let referenceDate: Date
+    var pin: PinnedWorkflow? = nil
     var repositoryLabel: String? = nil
+    var typicalDuration: TimeInterval? = nil
     var compact: Bool = false
 
+    @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -27,7 +31,7 @@ struct RunRow: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 0)
-                Text(RelativeTime.timestamp(for: run, referenceDate: referenceDate))
+                Text(RelativeTime.timestamp(for: run, typicalDuration: typicalDuration, referenceDate: referenceDate))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.tertiary)
             }
@@ -40,13 +44,12 @@ struct RunRow: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("Open in GitHub") {
-                openRun()
-            }
-            Button("Copy run URL") {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(run.htmlURL.absoluteString, forType: .string)
-            }
+            RunActionMenu(
+                store: store,
+                run: run,
+                pin: pin ?? store.pinMatching(run),
+                openWindow: openWindow
+            )
         }
         .help(run.displayTitle ?? run.name)
     }
@@ -86,6 +89,61 @@ struct RunRow: View {
     }
 }
 
+struct RunActionMenu: View {
+    let store: AppStore
+    var run: WorkflowRun?
+    var pin: PinnedWorkflow?
+    var openWindow: OpenWindowAction
+
+    var body: some View {
+        if let run {
+            Button("Open in GitHub") {
+                guard GitHubURL.isSafeToOpen(run.htmlURL) else { return }
+                NSWorkspace.shared.open(run.htmlURL)
+            }
+            Button("Copy run URL") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(run.htmlURL.absoluteString, forType: .string)
+            }
+            Divider()
+            if run.isActive {
+                Button("Cancel run", role: .destructive) {
+                    store.confirmCancel(run)
+                }
+            } else {
+                Button("Rerun") {
+                    Task { await store.rerun(run, failedOnly: false) }
+                }
+                if run.displayState == .failed {
+                    Button("Rerun failed jobs") {
+                        Task { await store.rerun(run, failedOnly: true) }
+                    }
+                }
+            }
+            Divider()
+        }
+
+        if let pin {
+            Button("Run workflow…") {
+                openDispatch(pin: pin, preferredRef: run?.branch)
+            }
+            Button("Unpin") {
+                store.removePin(pin)
+            }
+        } else if let run {
+            Button("Pin this workflow") {
+                store.addPin(PinnedWorkflow(repository: run.repository, workflowName: run.workflowName))
+            }
+        }
+    }
+
+    private func openDispatch(pin: PinnedWorkflow, preferredRef: String?) {
+        store.beginDispatch(pin: pin, preferredRef: preferredRef)
+        NSApp.activate(ignoringOtherApps: true)
+        openWindow(id: RunBarWindow.runWorkflow)
+    }
+}
+
 private struct ActivePulseRing: View {
     let color: Color
     let isAnimated: Bool
@@ -111,18 +169,28 @@ private struct ActivePulseRing: View {
 }
 
 struct PinRow: View {
+    let store: AppStore
     let snapshot: PinSnapshot
     let referenceDate: Date
+    var typicalDuration: TimeInterval? = nil
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         if let run = snapshot.latestRun {
-            RunRow(run: run, referenceDate: referenceDate, repositoryLabel: snapshot.pin.repository.fullName)
-                .overlay {
-                    if run.displayState == .failed {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(RunBarTheme.failure.opacity(0.55), lineWidth: 1)
-                    }
+            RunRow(
+                store: store,
+                run: run,
+                referenceDate: referenceDate,
+                pin: snapshot.pin,
+                repositoryLabel: snapshot.pin.repository.fullName,
+                typicalDuration: typicalDuration
+            )
+            .overlay {
+                if run.displayState == .failed {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(RunBarTheme.failure.opacity(0.55), lineWidth: 1)
                 }
+            }
         } else {
             HStack(spacing: 10) {
                 Image(systemName: "pin.fill")
@@ -144,6 +212,13 @@ struct PinRow: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(.quaternary.opacity(0.2))
             )
+            .contextMenu {
+                RunActionMenu(
+                    store: store,
+                    pin: snapshot.pin,
+                    openWindow: openWindow
+                )
+            }
         }
     }
 }

@@ -2,6 +2,15 @@
 
 All notable changes to RunBar are documented here.
 
+## 0.5.0 — 2026-08-20
+
+### Features
+
+- Right-click a run to **Rerun**, **Rerun failed jobs**, or **Cancel run** (`gh run rerun` / `gh run cancel`). Cancel asks first.
+- Right-click a pin (or the play control in Settings) to **Run workflow**. A small window loads that workflow’s `workflow_dispatch` inputs from the selected branch — booleans, choices, environments, and strings — then calls `gh workflow run`.
+- Pin or unpin a workflow from the run’s context menu.
+- Running rows show elapsed time against a typical duration (`3m · typically 4m`). Typical is the median of the last 10 completed runs of that workflow. No history stays elapsed-only. There is no progress bar.
+
 ## 0.4.0 — 2026-08-20
 
 ### Fixes

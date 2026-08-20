@@ -34,7 +34,7 @@ Or clone and `make install`, which copies `RunBar.app` into `~/Applications` dir
 1. Install and sign in with `gh` if you have not already.
 2. Click the bolt in the menu bar.
 3. Open **Settings** and add repositories (`owner/name` or **Browse GitHub repos**).
-4. Optionally pin Deploy to prod (or any workflow) so its latest run always sits at the top.
+4. Optionally pin Deploy to prod (or any workflow) so its latest run always sits at the top. Right-click a pin to run it, or a failed row to rerun.
 
 ## Privacy
 
